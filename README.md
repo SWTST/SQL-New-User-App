@@ -1,7 +1,7 @@
 # SQL New User Application
 
 ## 
-Repo structure that works well for handover:
+Repo structure:
 
 src/Provisioning/Provisioning.psm1 (all logic)
 
