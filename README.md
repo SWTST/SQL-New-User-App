@@ -1,7 +1,6 @@
 # SQL New User Application
 
-## 
-Repo structure:
+## Repo structure:
 
 src/Provisioning/Provisioning.psm1 (all logic)
 
