@@ -1,6 +1,6 @@
 ## First App Draft (Figma)
 
-![image](/Plan/Images/Initial-App-Plan.PNG)
+![image](/app-plan/Images/Initial-App-Plan.PNG)
 
 ### App Features and Functionality
 
