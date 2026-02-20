@@ -7,14 +7,14 @@
 The below features have been identified from the first draft
 
 **Backend Functions**
-- [ ] All Servers
-- [ ] All Server Roles
+- [x] All Servers
+- [x] All Server Roles
 - [ ] All Server Logins
-- [ ] All Databases
-- [ ] All Database Roles
+- [x] All Databases
+- [x] All Database Roles
 - [ ] All Database Users
 - [ ] Store Login information
-- [ ] Check Login access to Server
+- [ ] Check if Login exists on Server
   - [ ] Create Login on Server
   - [ ] Grant Server roles to Login
 - [ ] Check for Login in Database Users
