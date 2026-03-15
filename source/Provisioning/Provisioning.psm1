@@ -83,7 +83,135 @@ function Get-DatabaseUsers {
         $allUsers += Get-DbaDbUser -SqlInstance $Server -Database $db.name | Select-Object -Property Database, Name
     }
     Return $allUsers 
-
-
+    
 }
 # Get-DatabaseUsers -Server DESKTOP-AD0K85U\MSSQL
+
+# ── Provisioning Functions ────────────────────────────────────────────────────
+
+function New-ServerLogin {
+    param(
+        [string]$Server,
+        [string]$Login,
+        [ValidateSet('Windows', 'SQL')]
+        [string]$AuthType = 'Windows',
+        [System.Security.SecureString]$SecurePassword = $null
+    )
+
+    $exists = Get-ServerLogins -Server $Server -Login $Login
+    if ($exists) {
+        Write-Host "Login '$Login' already exists on '$Server'. Skipping creation."
+        return
+    }
+
+    if ($AuthType -eq 'Windows') {
+        New-DbaLogin -SqlInstance $Server -Login $Login -ErrorAction Stop
+        Write-Host "Created Windows login '$Login' on '$Server'."
+    } else {
+        if ($null -eq $SecurePassword) {
+            throw "SecurePassword is required for SQL Authentication."
+        }
+        New-DbaLogin -SqlInstance $Server -Login $Login `
+                     -SecurePassword $SecurePassword -ErrorAction Stop
+        Write-Host "Created SQL login '$Login' on '$Server'."
+    }
+}
+
+function New-DatabaseUser {
+    param(
+        [string]$Server,
+        [string]$Database,
+        [string]$Login
+    )
+
+    $existing = Get-DbaDbUser -SqlInstance $Server -Database $Database |
+                Where-Object { $_.Login -eq $Login -or $_.Name -eq $Login }
+
+    if ($existing) {
+        Write-Host "User for '$Login' already exists in '$Database' on '$Server'. Skipping."
+        return
+    }
+
+    New-DbaDbUser -SqlInstance $Server -Database $Database -Login $Login -ErrorAction Stop
+    Write-Host "Created database user for '$Login' in '$Database' on '$Server'."
+}
+
+function Grant-ServerRole {
+    param(
+        [string]$Server,
+        [string]$Login,
+        [string[]]$Roles
+    )
+
+    if (-not $Roles -or $Roles.Count -eq 0) { return }
+
+    foreach ($role in $Roles) {
+        try {
+            Add-DbaServerRoleMember -SqlInstance $Server -ServerRole $role `
+                                    -Login $Login -ErrorAction Stop
+            Write-Host "Granted server role '$role' to '$Login' on '$Server'."
+        } catch {
+            Write-Warning "Failed to grant server role '$role' to '$Login' on '$Server': $_"
+        }
+    }
+}
+
+function Grant-DatabaseRole {
+    param(
+        [string]$Server,
+        [string]$Database,
+        [string]$User,
+        [string[]]$Roles
+    )
+
+    if (-not $Roles -or $Roles.Count -eq 0) { return }
+
+    foreach ($role in $Roles) {
+        try {
+            Add-DbaDbRoleMember -SqlInstance $Server -Database $Database `
+                                -Role $role -User $User -ErrorAction Stop
+            Write-Host "Granted DB role '$role' to '$User' in '$Database' on '$Server'."
+        } catch {
+            Write-Warning "Failed to grant DB role '$role' to '$User' in '$Database': $_"
+        }
+    }
+}
+
+function Invoke-UserProvisioning {
+    param(
+        [string]$Server,
+        [string]$Login,
+        [ValidateSet('Windows', 'SQL')]
+        [string]$AuthType = 'Windows',
+        [System.Security.SecureString]$SecurePassword = $null,
+        [string[]]$ServerRoles   = @(),
+        # @{ "DatabaseName" = @("role1","role2") }
+        [hashtable]$DatabaseRoles = @{}
+    )
+
+    Write-Host "=== Provisioning '$Login' on '$Server' ==="
+
+    # 1. Ensure server login exists
+    New-ServerLogin -Server $Server -Login $Login `
+                    -AuthType $AuthType -SecurePassword $SecurePassword
+
+    # 2. Grant server-level roles
+    Grant-ServerRole -Server $Server -Login $Login -Roles $ServerRoles
+
+    # 3. For each database with selected roles: create user + grant roles
+    foreach ($dbName in $DatabaseRoles.Keys) {
+        $roles = $DatabaseRoles[$dbName]
+        if (-not $roles -or $roles.Count -eq 0) { continue }
+
+        $dbExists = Get-Databases -Server $Server | Where-Object { $_.Name -eq $dbName }
+        if (-not $dbExists) {
+            Write-Warning "Database '$dbName' not found on '$Server'. Skipping."
+            continue
+        }
+
+        New-DatabaseUser  -Server $Server -Database $dbName -Login $Login
+        Grant-DatabaseRole -Server $Server -Database $dbName -User $Login -Roles $roles
+    }
+
+    Write-Host "=== Provisioning complete for '$Login' on '$Server' ==="
+}

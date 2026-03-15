@@ -1,9 +1,122 @@
-
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        Title="Demo" Height="200" Width="300">
-    <StackPanel>
-        <TextBox Name="UserInput" Width="200" Margin="10"/>
-        <Button Name="SubmitBtn" Content="Submit" Width="200" Margin="10"/>
-        <TextBlock Name="OutputText" Margin="10"/>
-    </StackPanel>
+        Title="SQL User Provisioning"
+        Height="700" Width="1100"
+        WindowStartupLocation="CenterScreen"
+        MinHeight="500" MinWidth="800">
+
+    <DockPanel>
+
+        <!-- Status Bar -->
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem>
+                <TextBlock Name="StatusUserText" Text="User: (none)"/>
+            </StatusBarItem>
+            <Separator/>
+            <StatusBarItem>
+                <TextBlock Name="StatusText" Text="Ready"/>
+            </StatusBarItem>
+        </StatusBar>
+
+        <!-- Bottom Toolbar -->
+        <Border DockPanel.Dock="Bottom" BorderThickness="0,1,0,0"
+                BorderBrush="#CCCCCC" Padding="4,4,4,4">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                    <Button Name="CurrentLoginBtn"  Content="Current Login"      Width="110" Margin="0,0,4,0"/>
+                    <Button Name="AssignBtn"         Content="Assign Permissions" Width="140"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Button Name="ExitBtn"           Content="Exit"                  Width="80"  Margin="0,0,4,0"/>
+                    <Button Name="RefreshServersBtn" Content="Refresh Server List"   Width="130" Margin="0,0,4,0"/>
+                    <Button Name="RefreshDbBtn"      Content="Refresh Database List" Width="150"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Main Three-Column Area -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200" MinWidth="140"/>
+                <ColumnDefinition Width="4"/>
+                <ColumnDefinition Width="*"   MinWidth="300"/>
+                <ColumnDefinition Width="4"/>
+                <ColumnDefinition Width="200" MinWidth="140"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: Server List -->
+            <DockPanel Grid.Column="0" Margin="4">
+                <TextBlock DockPanel.Dock="Top" Text="Server List"
+                           FontWeight="Bold" Margin="0,0,0,4"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Name="ServerListPanel"/>
+                </ScrollViewer>
+            </DockPanel>
+
+            <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Stretch"
+                          Background="#DDDDDD"/>
+
+            <!-- Center: Server Combo + DB Cards + Query Window -->
+            <Grid Grid.Column="2" Margin="4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="4"/>
+                    <RowDefinition Height="160"/>
+                </Grid.RowDefinitions>
+
+                <!-- Server selector -->
+                <DockPanel Grid.Row="0" Margin="0,0,0,4">
+                    <TextBlock Text="Server:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <ComboBox Name="ServerCombo"/>
+                </DockPanel>
+
+                <!-- Database cards -->
+                <Border Grid.Row="1" BorderThickness="1" BorderBrush="#CCCCCC">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <WrapPanel Name="DatabaseWrapPanel" Orientation="Horizontal"
+                                   Margin="4"/>
+                    </ScrollViewer>
+                </Border>
+
+                <GridSplitter Grid.Row="2" Height="4" HorizontalAlignment="Stretch"
+                              Background="#DDDDDD"/>
+
+                <!-- Query Window -->
+                <Grid Grid.Row="3">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Query Window"
+                               VerticalAlignment="Center" Margin="0,2,0,2"/>
+                    <Button Grid.Row="0" Grid.Column="1" Name="ExecuteQueryBtn"
+                            Content="Execute" Width="80" Margin="4,2,0,2"/>
+                    <TextBox Grid.Row="1" Grid.ColumnSpan="2" Name="QueryBox"
+                             AcceptsReturn="True" TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             FontFamily="Consolas" FontSize="12"
+                             BorderThickness="1" BorderBrush="#CCCCCC"/>
+                </Grid>
+            </Grid>
+
+            <GridSplitter Grid.Column="3" Width="4" HorizontalAlignment="Stretch"
+                          Background="#DDDDDD"/>
+
+            <!-- Right: Server Roles -->
+            <DockPanel Grid.Column="4" Margin="4">
+                <TextBlock DockPanel.Dock="Top" Text="Server Roles"
+                           FontWeight="Bold" Margin="0,0,0,4"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Name="ServerRolesPanel"/>
+                </ScrollViewer>
+            </DockPanel>
+
+        </Grid>
+    </DockPanel>
 </Window>

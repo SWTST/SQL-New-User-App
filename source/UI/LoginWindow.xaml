@@ -1,0 +1,45 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        Title="New User Login Details"
+        Height="260" Width="380"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Auth Type -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock Text="Authentication:" Width="110" VerticalAlignment="Center"/>
+            <ComboBox Name="AuthTypeCombo" Width="210">
+                <ComboBoxItem Content="Windows Authentication" IsSelected="True"/>
+                <ComboBoxItem Content="SQL Authentication"/>
+            </ComboBox>
+        </StackPanel>
+
+        <!-- Username -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock Text="Username:" Width="110" VerticalAlignment="Center"/>
+            <TextBox Name="UsernameBox" Width="210"/>
+        </StackPanel>
+
+        <!-- Password (hidden for Windows Auth) -->
+        <StackPanel Grid.Row="2" Name="PasswordRow" Orientation="Horizontal"
+                    Margin="0,0,0,8" Visibility="Collapsed">
+            <TextBlock Text="Password:" Width="110" VerticalAlignment="Center"/>
+            <PasswordBox Name="PasswordBox" Width="210"/>
+        </StackPanel>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Name="CurrentLoginBtn" Content="Current Login" Width="110" Margin="0,0,8,0"/>
+            <Button Name="OkBtn"           Content="OK"            Width="70"  Margin="0,0,8,0"/>
+            <Button Name="CancelBtn"       Content="Cancel"        Width="70"/>
+        </StackPanel>
+    </Grid>
+</Window>
