@@ -1,0 +1,34 @@
+﻿2026-04-14 19:18:19 [INFO] App starting. User=steve Host=DESKTOP-AD0K85U
+2026-04-14 19:18:21 [INFO] Provisioning module imported from E:\source\repo\SQL-New-User-App\source\UI\..\Provisioning\Provisioning.psm1
+2026-04-14 19:18:21 [INFO] Showing login dialog
+2026-04-14 19:19:37 [INFO] OK clicked. Raw text='NewTestUser'
+2026-04-14 19:19:37 [INFO] OK handler set NewUserLogin='NewTestUser' AuthType='SQL'
+2026-04-14 19:19:37 [INFO] Login dialog closed. NewUserLogin='NewTestUser' AuthType='SQL'
+2026-04-14 19:19:37 [INFO] Opening main window
+2026-04-14 19:19:37 [INFO] Show-MainWindow: loading XAML
+2026-04-14 19:19:37 [INFO] Show-MainWindow: XAML loaded, wiring controls
+2026-04-14 19:19:37 [INFO] Show-MainWindow: calling ShowDialog
+2026-04-14 19:19:37 [INFO] Main window Loaded event fired
+2026-04-14 19:20:02 [INFO] Assign clicked for 'NewTestUser' on 2 server(s)
+2026-04-14 19:20:02 [INFO]   [DESKTOP-AD0K85U\MSSQL2] ServerRoles=dbcreator DbRoles=Test1=db_datareader; Test2=db_datareader
+2026-04-14 19:20:03 [INFO] [DESKTOP-AD0K85U\MSSQL2] === Provisioning 'NewTestUser' on 'DESKTOP-AD0K85U\MSSQL2' ===
+2026-04-14 19:20:03 [INFO] [DESKTOP-AD0K85U\MSSQL2] NewTestUser - Exists on this server
+2026-04-14 19:20:03 [INFO] [DESKTOP-AD0K85U\MSSQL2] Login 'NewTestUser' already exists on 'DESKTOP-AD0K85U\MSSQL2'. Skipping creation.
+2026-04-14 19:20:03 [INFO] [DESKTOP-AD0K85U\MSSQL2] Granted server role 'dbcreator' to 'NewTestUser' on 'DESKTOP-AD0K85U\MSSQL2'.
+2026-04-14 19:20:03 [INFO] [DESKTOP-AD0K85U\MSSQL2] Created database user for 'NewTestUser' in 'Test1' on 'DESKTOP-AD0K85U\MSSQL2'.
+2026-04-14 19:20:03 [INFO] [DESKTOP-AD0K85U\MSSQL2] Granted DB role 'db_datareader' to 'NewTestUser' in 'Test1' on 'DESKTOP-AD0K85U\MSSQL2'.
+2026-04-14 19:20:03 [INFO] [DESKTOP-AD0K85U\MSSQL2] Created database user for 'NewTestUser' in 'Test2' on 'DESKTOP-AD0K85U\MSSQL2'.
+2026-04-14 19:20:03 [INFO] [DESKTOP-AD0K85U\MSSQL2] Granted DB role 'db_datareader' to 'NewTestUser' in 'Test2' on 'DESKTOP-AD0K85U\MSSQL2'.
+2026-04-14 19:20:03 [INFO] [DESKTOP-AD0K85U\MSSQL2] === Provisioning complete for 'NewTestUser' on 'DESKTOP-AD0K85U\MSSQL2' ===
+2026-04-14 19:20:03 [INFO]   [DESKTOP-AD0K85U\MSSQL3] ServerRoles=dbcreator DbRoles=InstanceTest1=db_datareader
+2026-04-14 19:20:03 [INFO] [DESKTOP-AD0K85U\MSSQL3] === Provisioning 'NewTestUser' on 'DESKTOP-AD0K85U\MSSQL3' ===
+2026-04-14 19:20:03 [INFO] [DESKTOP-AD0K85U\MSSQL3] NewTestUser - Does not exist on this server
+2026-04-14 19:20:03 [INFO] [DESKTOP-AD0K85U\MSSQL3] [19:20:03][New-DbaLogin] DESKTOP-AD0K85U\MSSQL3 does not have Mixed Mode enabled. [NewTestUser] is an SQL Login. Enable mixed mode authentication after the migration completes to use this type of login.
+2026-04-14 19:20:03 [INFO] [DESKTOP-AD0K85U\MSSQL3] Created SQL login 'NewTestUser' on 'DESKTOP-AD0K85U\MSSQL3'.
+2026-04-14 19:20:03 [INFO] [DESKTOP-AD0K85U\MSSQL3] Granted server role 'dbcreator' to 'NewTestUser' on 'DESKTOP-AD0K85U\MSSQL3'.
+2026-04-14 19:20:03 [INFO] [DESKTOP-AD0K85U\MSSQL3] Created database user for 'NewTestUser' in 'InstanceTest1' on 'DESKTOP-AD0K85U\MSSQL3'.
+2026-04-14 19:20:03 [INFO] [DESKTOP-AD0K85U\MSSQL3] Granted DB role 'db_datareader' to 'NewTestUser' in 'InstanceTest1' on 'DESKTOP-AD0K85U\MSSQL3'.
+2026-04-14 19:20:03 [INFO] [DESKTOP-AD0K85U\MSSQL3] === Provisioning complete for 'NewTestUser' on 'DESKTOP-AD0K85U\MSSQL3' ===
+2026-04-14 19:24:11 [INFO] Show-MainWindow: ShowDialog returned
+2026-04-14 19:24:11 [INFO] Main window closed
+2026-04-14 19:24:11 [INFO] App exiting

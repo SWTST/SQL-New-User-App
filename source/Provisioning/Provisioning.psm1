@@ -1,4 +1,4 @@
-Set-DbatoolsInsecureConnection -SessionOnly
+﻿Set-DbatoolsInsecureConnection -SessionOnly
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser
 
 function Get-AllServers {
@@ -42,9 +42,7 @@ function Get-ServerRoles {
     )
 
     $roles = Get-DbaServerRole -SqlInstance $Server
-    $roles | Select-Object -Property Role
-    Return $roles
-
+    return $roles
 }
 # Getting top 1 server roles - Tweak logic for app
 # $Server1 = Get-AllServers | Select-object -First 1
@@ -105,14 +103,15 @@ function New-ServerLogin {
     }
 
     if ($AuthType -eq 'Windows') {
-        New-DbaLogin -SqlInstance $Server -Login $Login -ErrorAction Stop
+        New-DbaLogin -SqlInstance $Server -Login $Login -Confirm:$false -ErrorAction Stop | Out-Null
         Write-Host "Created Windows login '$Login' on '$Server'."
-    } else {
+    }
+    else {
         if ($null -eq $SecurePassword) {
             throw "SecurePassword is required for SQL Authentication."
         }
         New-DbaLogin -SqlInstance $Server -Login $Login `
-                     -SecurePassword $SecurePassword -ErrorAction Stop
+            -SecurePassword $SecurePassword -Confirm:$false -ErrorAction Stop | Out-Null
         Write-Host "Created SQL login '$Login' on '$Server'."
     }
 }
@@ -125,14 +124,14 @@ function New-DatabaseUser {
     )
 
     $existing = Get-DbaDbUser -SqlInstance $Server -Database $Database |
-                Where-Object { $_.Login -eq $Login -or $_.Name -eq $Login }
+    Where-Object { $_.Login -eq $Login -or $_.Name -eq $Login }
 
     if ($existing) {
         Write-Host "User for '$Login' already exists in '$Database' on '$Server'. Skipping."
         return
     }
 
-    New-DbaDbUser -SqlInstance $Server -Database $Database -Login $Login -ErrorAction Stop
+    New-DbaDbUser -SqlInstance $Server -Database $Database -Login $Login -Confirm:$false -ErrorAction Stop | Out-Null
     Write-Host "Created database user for '$Login' in '$Database' on '$Server'."
 }
 
@@ -148,9 +147,10 @@ function Grant-ServerRole {
     foreach ($role in $Roles) {
         try {
             Add-DbaServerRoleMember -SqlInstance $Server -ServerRole $role `
-                                    -Login $Login -ErrorAction Stop
+                -Login $Login -Confirm:$false -ErrorAction Stop | Out-Null
             Write-Host "Granted server role '$role' to '$Login' on '$Server'."
-        } catch {
+        }
+        catch {
             Write-Warning "Failed to grant server role '$role' to '$Login' on '$Server': $_"
         }
     }
@@ -169,9 +169,10 @@ function Grant-DatabaseRole {
     foreach ($role in $Roles) {
         try {
             Add-DbaDbRoleMember -SqlInstance $Server -Database $Database `
-                                -Role $role -User $User -ErrorAction Stop
+                -Role $role -User $User -Confirm:$false -ErrorAction Stop | Out-Null
             Write-Host "Granted DB role '$role' to '$User' in '$Database' on '$Server'."
-        } catch {
+        }
+        catch {
             Write-Warning "Failed to grant DB role '$role' to '$User' in '$Database': $_"
         }
     }
@@ -184,7 +185,7 @@ function Invoke-UserProvisioning {
         [ValidateSet('Windows', 'SQL')]
         [string]$AuthType = 'Windows',
         [System.Security.SecureString]$SecurePassword = $null,
-        [string[]]$ServerRoles   = @(),
+        [string[]]$ServerRoles = @(),
         # @{ "DatabaseName" = @("role1","role2") }
         [hashtable]$DatabaseRoles = @{}
     )
@@ -193,7 +194,7 @@ function Invoke-UserProvisioning {
 
     # 1. Ensure server login exists
     New-ServerLogin -Server $Server -Login $Login `
-                    -AuthType $AuthType -SecurePassword $SecurePassword
+        -AuthType $AuthType -SecurePassword $SecurePassword
 
     # 2. Grant server-level roles
     Grant-ServerRole -Server $Server -Login $Login -Roles $ServerRoles

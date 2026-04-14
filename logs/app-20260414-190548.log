@@ -1,0 +1,22 @@
+﻿2026-04-14 19:05:48 [INFO] App starting. User=steve Host=DESKTOP-AD0K85U
+2026-04-14 19:05:51 [INFO] Provisioning module imported from E:\source\repo\SQL-New-User-App\source\UI\..\Provisioning\Provisioning.psm1
+2026-04-14 19:05:51 [INFO] Showing login dialog
+2026-04-14 19:05:54 [INFO] OK clicked. Raw text='DESKTOP-AD0K85U\steve'
+2026-04-14 19:05:54 [INFO] OK handler set NewUserLogin='DESKTOP-AD0K85U\steve' AuthType='Windows'
+2026-04-14 19:05:54 [INFO] Login dialog closed. NewUserLogin='DESKTOP-AD0K85U\steve' AuthType='Windows'
+2026-04-14 19:05:54 [INFO] Opening main window
+2026-04-14 19:05:54 [INFO] Show-MainWindow: loading XAML
+2026-04-14 19:05:54 [INFO] Show-MainWindow: XAML loaded, wiring controls
+2026-04-14 19:05:54 [INFO] Show-MainWindow: calling ShowDialog
+2026-04-14 19:05:54 [INFO] Main window Loaded event fired
+2026-04-14 19:07:25 [INFO] Assign clicked for 'DESKTOP-AD0K85U\steve' on 2 server(s)
+2026-04-14 19:07:25 [INFO]   [DESKTOP-AD0K85U\MSSQL2] ServerRoles=dbcreator DbRoles=tempdb=db_datareader; master=db_datareader; msdb=db_datareader
+2026-04-14 19:07:27 [INFO]   [DESKTOP-AD0K85U\MSSQL3] ServerRoles=dbcreator DbRoles=tempdb=db_datareader; master=db_datareader; msdb=db_datareader
+2026-04-14 19:08:08 [INFO] OK clicked. Raw text='NewTestLogin'
+2026-04-14 19:08:08 [INFO] OK handler set NewUserLogin='NewTestLogin' AuthType='SQL'
+2026-04-14 19:08:41 [INFO] Assign clicked for 'NewTestLogin' on 2 server(s)
+2026-04-14 19:08:41 [INFO]   [DESKTOP-AD0K85U\MSSQL2] ServerRoles=public DbRoles=Test1=db_datareader; Test2=db_datareader
+2026-04-14 19:08:42 [INFO]   [DESKTOP-AD0K85U\MSSQL3] ServerRoles=public DbRoles=InstanceTest1=db_datareader
+2026-04-14 19:11:11 [INFO] Show-MainWindow: ShowDialog returned
+2026-04-14 19:11:11 [INFO] Main window closed
+2026-04-14 19:11:11 [INFO] App exiting

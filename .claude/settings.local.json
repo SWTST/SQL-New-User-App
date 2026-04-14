@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell.exe -NoProfile -Command \"Get-Module -ListAvailable dbatools | Select-Object Name, Version, Path | Format-List\")",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"source/UI/App.ps1\")",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"e:/source/repo/SQL-New-User-App/reencode.ps1\")",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"e:/source/repo/SQL-New-User-App/source/UI/App.ps1\")"
+    ]
+  }
+}

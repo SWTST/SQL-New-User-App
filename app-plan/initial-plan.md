@@ -9,17 +9,23 @@ The below features have been identified from the first draft
 **Backend Functions**
 - [x] All Servers
 - [x] All Server Roles
-- [ ] All Server Logins
+- [x] All Server Logins (`Get-ServerLogins`)
 - [x] All Databases
 - [x] All Database Roles
-- [ ] All Database Users
-- [ ] Store Login information
-- [ ] Check if Login exists on Server
-  - [ ] Create Login on Server
-  - [ ] Grant Server roles to Login
-- [ ] Check for Login in Database Users
-  - [ ] Create Database User
-  - [ ] Grant Database roles to user
-- [ ] Refresh Server List
-- [ ] Refresh Database List
-- [ ] Assign Permissions
+- [x] All Database Users
+- [x] Store Login information (captured via LoginWindow dialog)
+- [x] Check if Login exists on Server
+  - [x] Create Login on Server
+  - [x] Grant Server roles to Login
+- [x] Check for Login in Database Users
+  - [x] Create Database User
+  - [x] Grant Database roles to user
+- [x] Refresh Server List
+- [x] Refresh Database List
+- [x] Assign Permissions (per-server selections; persists across dropdown switches)
+
+**Still to do**
+- [ ] Access templates (config/access-templates.json + UI save/apply/delete)
+- [ ] Alternate connection credentials ("run as other user" when connecting to SQL)
+- [ ] Move CMS host to config; JSON fallback when CMS unavailable
+- [ ] Operator guide with screenshots (docs/)

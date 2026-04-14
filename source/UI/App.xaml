@@ -1,4 +1,4 @@
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         Title="SQL User Provisioning"
         Height="700" Width="1100"
         WindowStartupLocation="CenterScreen"

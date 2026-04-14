@@ -1,14 +1,30 @@
-Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
+﻿Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
 
 $script:ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
 $script:ModulePath = Join-Path $script:ScriptDir "..\Provisioning\Provisioning.psm1"
 
+$script:LogDir = Join-Path $script:ScriptDir "..\..\logs"
+if (-not (Test-Path $script:LogDir)) { New-Item -ItemType Directory -Path $script:LogDir | Out-Null }
+$script:LogFile = Join-Path $script:LogDir ("app-{0:yyyyMMdd-HHmmss}.log" -f (Get-Date))
+
+function Write-Log {
+    param([string]$Message, [string]$Level = 'INFO')
+    $line = "{0:yyyy-MM-dd HH:mm:ss} [{1}] {2}" -f (Get-Date), $Level, $Message
+    Add-Content -Path $script:LogFile -Value $line -Encoding UTF8
+}
+
+Write-Log "App starting. User=$([Environment]::UserName) Host=$([Environment]::MachineName)"
 Import-Module $script:ModulePath -Force
+Write-Log "Provisioning module imported from $script:ModulePath"
 
 # ── Shared state ──────────────────────────────────────────────────────────────
 $script:NewUserLogin = $null
 $script:NewUserPassword = $null   # SecureString or $null for Windows auth
 $script:AuthType = 'Windows'
+
+# Per-server selections: @{ serverName = @{ ServerRoles = @(); DatabaseRoles = @{ db = @(roles) } } }
+$script:ServerSelections = @{}
+$script:CurrentServer = $null
 
 # ── UI control references (populated in Show-MainWindow) ──────────────────────
 $script:ServerListPanel = $null
@@ -31,9 +47,30 @@ function Set-Status([string]$Msg) {
     if ($script:StatusText) { $script:StatusText.Text = $Msg }
 }
 
+function Sync-ServerCombo {
+    $prev = $script:ServerCombo.SelectedItem
+    $script:ServerCombo.Items.Clear()
+    foreach ($name in ($script:ServerSelections.Keys | Sort-Object)) {
+        $script:ServerCombo.Items.Add($name) | Out-Null
+    }
+    if ($prev -and $script:ServerCombo.Items.Contains($prev)) {
+        $script:ServerCombo.SelectedItem = $prev
+    }
+    elseif ($script:ServerCombo.Items.Count -gt 0) {
+        $script:ServerCombo.SelectedIndex = 0
+    }
+    else {
+        $script:CurrentServer = $null
+        $script:ServerRolesPanel.Children.Clear()
+        $script:DbWrapPanel.Children.Clear()
+    }
+}
+
 function Invoke-PopulateServerList {
     $script:ServerListPanel.Children.Clear()
     $script:ServerCombo.Items.Clear()
+    $script:ServerSelections.Clear()
+    $script:CurrentServer = $null
     Set-Status "Loading servers..."
     try {
         $servers = Get-AllServers
@@ -41,14 +78,59 @@ function Invoke-PopulateServerList {
             $cb = New-Object System.Windows.Controls.CheckBox
             $cb.Content = $srv.ServerName
             $cb.Margin = [System.Windows.Thickness]::new(2)
+            $cb.Add_Checked({
+                    $name = $this.Content
+                    if (-not $script:ServerSelections.ContainsKey($name)) {
+                        $script:ServerSelections[$name] = @{ ServerRoles = @(); DatabaseRoles = @{} }
+                    }
+                    Sync-ServerCombo
+                    $script:ServerCombo.SelectedItem = $name
+                })
+            $cb.Add_Unchecked({
+                    $name = $this.Content
+                    $script:ServerSelections.Remove($name) | Out-Null
+                    if ($script:CurrentServer -eq $name) { $script:CurrentServer = $null }
+                    Sync-ServerCombo
+                })
             $script:ServerListPanel.Children.Add($cb) | Out-Null
-            $script:ServerCombo.Items.Add($srv.ServerName) | Out-Null
         }
-        if ($script:ServerCombo.Items.Count -gt 0) { $script:ServerCombo.SelectedIndex = 0 }
-        Set-Status "Loaded $($servers.Count) server(s)."
+        Set-Status "Loaded $($servers.Count) server(s). Check one or more to begin."
     }
     catch {
         Set-Status "Error loading servers: $_"
+    }
+}
+
+function Save-CurrentSelections {
+    if ([string]::IsNullOrEmpty($script:CurrentServer)) { return }
+    if (-not $script:ServerSelections.ContainsKey($script:CurrentServer)) { return }
+    $sel = $script:ServerSelections[$script:CurrentServer]
+    $sel.ServerRoles = @(Get-CheckedServerRoles)
+    $sel.DatabaseRoles = Get-CheckedDatabaseRoles
+}
+
+function Restore-Selections([string]$Server) {
+    if ([string]::IsNullOrEmpty($Server)) { return }
+    if (-not $script:ServerSelections.ContainsKey($Server)) { return }
+    $sel = $script:ServerSelections[$Server]
+    foreach ($cb in $script:ServerRolesPanel.Children) {
+        if ($cb -is [System.Windows.Controls.CheckBox]) {
+            $cb.IsChecked = ($sel.ServerRoles -contains $cb.Content)
+        }
+    }
+    foreach ($card in $script:DbWrapPanel.Children) {
+        if (-not ($card -is [System.Windows.Controls.Border])) { continue }
+        $sp = $card.Child
+        $hdr = $sp.Children | Where-Object { $_ -is [System.Windows.Controls.TextBlock] } | Select-Object -First 1
+        if (-not $hdr) { continue }
+        $dbName = $hdr.Text
+        $roles = @()
+        if ($sel.DatabaseRoles.ContainsKey($dbName)) { $roles = @($sel.DatabaseRoles[$dbName]) }
+        foreach ($child in $sp.Children) {
+            if ($child -is [System.Windows.Controls.CheckBox]) {
+                $child.IsChecked = ($roles -contains $child.Content)
+            }
+        }
     }
 }
 
@@ -171,15 +253,17 @@ function Show-LoginDialog {
             else {
                 [System.Windows.Visibility]::Collapsed
             }
-        }.GetNewClosure())
+        })
 
     $fillWinBtn.Add_Click({
             $userBox.Text = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-        }.GetNewClosure())
+        })
 
     $okBtn.Add_Click({
+            Write-Log "OK clicked. Raw text='$($userBox.Text)'"
             $user = $userBox.Text.Trim()
             if ([string]::IsNullOrWhiteSpace($user)) {
+                Write-Log "Empty username - validation failed"
                 [System.Windows.MessageBox]::Show("Please enter a username.", "Validation",
                     [System.Windows.MessageBoxButton]::OK,
                     [System.Windows.MessageBoxImage]::Warning)
@@ -188,17 +272,26 @@ function Show-LoginDialog {
             $script:NewUserLogin = $user
             $script:AuthType = if ($authCombo.SelectedIndex -eq 1) { 'SQL' } else { 'Windows' }
             $script:NewUserPassword = if ($script:AuthType -eq 'SQL') { $passBox.SecurePassword } else { $null }
+            Write-Log "OK handler set NewUserLogin='$script:NewUserLogin' AuthType='$script:AuthType'"
             $dlg.Close()
-        }.GetNewClosure())
+        })
 
-    $cancelBtn.Add_Click({ $dlg.Close() }.GetNewClosure())
+    $cancelBtn.Add_Click({ $dlg.Close() })
 
     $dlg.ShowDialog() | Out-Null
 }
 
 # ── Main Window ───────────────────────────────────────────────────────────────
 function Show-MainWindow {
-    $win = Import-Xaml (Join-Path $script:ScriptDir "App.xaml")
+    Write-Log "Show-MainWindow: loading XAML"
+    try {
+        $win = Import-Xaml (Join-Path $script:ScriptDir "App.xaml")
+    }
+    catch {
+        Write-Log "Show-MainWindow: XAML load failed: $($_.Exception.Message)" 'ERROR'
+        throw
+    }
+    Write-Log "Show-MainWindow: XAML loaded, wiring controls"
 
     # Bind controls to script-scope variables so helper functions can reach them
     $script:ServerListPanel = $win.FindName("ServerListPanel")
@@ -222,10 +315,18 @@ function Show-MainWindow {
     # ── Events ────────────────────────────────────────────────────────────────
 
     $script:ServerCombo.Add_SelectionChanged({
+            Save-CurrentSelections
             $srv = $script:ServerCombo.SelectedItem
             if ($srv) {
                 Invoke-PopulateServerRoles   $srv
                 Invoke-PopulateDatabaseCards $srv
+                Restore-Selections $srv
+                $script:CurrentServer = $srv
+            }
+            else {
+                $script:ServerRolesPanel.Children.Clear()
+                $script:DbWrapPanel.Children.Clear()
+                $script:CurrentServer = $null
             }
         })
 
@@ -265,11 +366,10 @@ function Show-MainWindow {
                 return
             }
 
-            $checkedServers = @(Get-CheckedServers)
-            $checkedServerRoles = @(Get-CheckedServerRoles)
-            $checkedDbRoles = Get-CheckedDatabaseRoles
+            Save-CurrentSelections
+            $servers = @($script:ServerSelections.Keys)
 
-            if ($checkedServers.Count -eq 0) {
+            if ($servers.Count -eq 0) {
                 [System.Windows.MessageBox]::Show(
                     "Please check at least one server in the Server List.",
                     "No Servers Selected", [System.Windows.MessageBoxButton]::OK,
@@ -278,7 +378,7 @@ function Show-MainWindow {
             }
 
             $confirm = [System.Windows.MessageBox]::Show(
-                "Provision '$($script:NewUserLogin)' on $($checkedServers.Count) server(s)?`n`nThis will create logins, database users, and grant the selected roles.",
+                "Provision '$($script:NewUserLogin)' on $($servers.Count) server(s)?`n`nThis will create logins, database users, and grant the selected roles.",
                 "Confirm Provisioning",
                 [System.Windows.MessageBoxButton]::YesNo,
                 [System.Windows.MessageBoxImage]::Question)
@@ -286,19 +386,24 @@ function Show-MainWindow {
             if ($confirm -ne [System.Windows.MessageBoxResult]::Yes) { return }
 
             Set-Status "Provisioning..."
+            Write-Log "Assign clicked for '$($script:NewUserLogin)' on $($servers.Count) server(s)"
             $errors = @()
-            foreach ($server in $checkedServers) {
+            foreach ($server in $servers) {
+                $sel = $script:ServerSelections[$server]
+                Write-Log "  [$server] ServerRoles=$($sel.ServerRoles -join ',') DbRoles=$(($sel.DatabaseRoles.Keys | ForEach-Object { "$_=$($sel.DatabaseRoles[$_] -join ',')" }) -join '; ')"
                 try {
-                    Invoke-UserProvisioning `
+                    $streams = Invoke-UserProvisioning `
                         -Server         $server `
                         -Login          $script:NewUserLogin `
                         -AuthType       $script:AuthType `
                         -SecurePassword $script:NewUserPassword `
-                        -ServerRoles    $checkedServerRoles `
-                        -DatabaseRoles  $checkedDbRoles
+                        -ServerRoles    $sel.ServerRoles `
+                        -DatabaseRoles  $sel.DatabaseRoles *>&1
+                    foreach ($line in $streams) { Write-Log "[$server] $line" }
                 }
                 catch {
                     $errors += "[$server] $_"
+                    Write-Log "Provisioning error on $server`: $_" 'ERROR'
                 }
             }
 
@@ -321,13 +426,33 @@ function Show-MainWindow {
 
     $exitBtn.Add_Click({ $win.Close() }.GetNewClosure())
 
-    $win.Add_Loaded({ Invoke-PopulateServerList })
+    $win.Add_Loaded({
+            Write-Log "Main window Loaded event fired"
+            try { Invoke-PopulateServerList } catch { Write-Log "PopulateServerList error: $_" 'ERROR' }
+        })
 
+    Write-Log "Show-MainWindow: calling ShowDialog"
     $win.ShowDialog() | Out-Null
+    Write-Log "Show-MainWindow: ShowDialog returned"
 }
 
 # ── Entry Point ───────────────────────────────────────────────────────────────
-Show-LoginDialog
-if (-not [string]::IsNullOrEmpty($script:NewUserLogin)) {
-    Show-MainWindow
+try {
+    Write-Log "Showing login dialog"
+    Show-LoginDialog
+    Write-Log "Login dialog closed. NewUserLogin='$script:NewUserLogin' AuthType='$script:AuthType'"
+    if (-not [string]::IsNullOrEmpty($script:NewUserLogin)) {
+        Write-Log "Opening main window"
+        Show-MainWindow
+        Write-Log "Main window closed"
+    }
+    else {
+        Write-Log "No login captured - exiting"
+    }
 }
+catch {
+    $msg = "FATAL: $($_.Exception.Message)`n$($_.ScriptStackTrace)"
+    Write-Log $msg 'ERROR'
+    [System.Windows.MessageBox]::Show($msg, "Error", 'OK', 'Error') | Out-Null
+}
+Write-Log "App exiting"

@@ -1,0 +1,8 @@
+﻿2026-04-14 18:43:30 [INFO] App starting. User=steve Host=DESKTOP-AD0K85U
+2026-04-14 18:43:33 [INFO] Provisioning module imported from E:\source\repo\SQL-New-User-App\source\UI\..\Provisioning\Provisioning.psm1
+2026-04-14 18:43:33 [INFO] Showing login dialog
+2026-04-14 18:43:38 [INFO] OK clicked. Raw text='DESKTOP-AD0K85U\steve'
+2026-04-14 18:43:38 [INFO] OK handler set NewUserLogin='DESKTOP-AD0K85U\steve' AuthType='Windows'
+2026-04-14 18:43:38 [INFO] Login dialog closed. NewUserLogin='' AuthType='Windows'
+2026-04-14 18:43:38 [INFO] No login captured - exiting
+2026-04-14 18:43:38 [INFO] App exiting
