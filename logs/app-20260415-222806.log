@@ -1,0 +1,25 @@
+2026-04-15 22:28:06 [INFO] App starting. User=steve Host=DESKTOP-AD0K85U
+2026-04-15 22:28:06 [INFO] Provisioning module imported from E:\source\repo\SQL-New-User-App\source\UI\..\Provisioning\Provisioning.psm1
+2026-04-15 22:28:06 [INFO] Showing login dialog
+2026-04-15 22:28:07 [INFO] OK clicked. Raw text='DESKTOP-AD0K85U\steve'
+2026-04-15 22:28:07 [INFO] OK handler set NewUserLogin='DESKTOP-AD0K85U\steve' AuthType='Windows'
+2026-04-15 22:28:07 [INFO] Login dialog closed. NewUserLogin='DESKTOP-AD0K85U\steve' AuthType='Windows'
+2026-04-15 22:28:07 [INFO] Opening main window
+2026-04-15 22:28:07 [INFO] Show-MainWindow: loading XAML
+2026-04-15 22:28:07 [INFO] Show-MainWindow: XAML loaded, wiring controls
+2026-04-15 22:28:07 [INFO] Show-MainWindow: calling ShowDialog
+2026-04-15 22:28:08 [INFO] Main window Loaded event fired
+2026-04-15 22:28:14 [INFO] Settings saved: DarkMode=True CmsSnapshotEnabled=False
+2026-04-15 22:28:19 [INFO] Settings saved: DarkMode=False CmsSnapshotEnabled=False
+2026-04-15 22:28:22 [INFO] Settings saved: DarkMode=True CmsSnapshotEnabled=False
+2026-04-15 22:32:51 [INFO] Settings saved: DarkMode=False CmsSnapshotEnabled=False
+2026-04-15 22:32:53 [INFO] Settings saved: DarkMode=False CmsSnapshotEnabled=False
+2026-04-15 22:32:56 [INFO] Settings saved: DarkMode=True CmsSnapshotEnabled=False
+2026-04-15 22:33:00 [INFO] Settings saved: DarkMode=False CmsSnapshotEnabled=False
+2026-04-15 22:33:06 [INFO] OK clicked. Raw text='DESKTOP-AD0K85U\steve'
+2026-04-15 22:33:06 [INFO] OK handler set NewUserLogin='DESKTOP-AD0K85U\steve' AuthType='Windows'
+2026-04-15 22:33:12 [INFO] Settings saved: DarkMode=True CmsSnapshotEnabled=False
+2026-04-15 22:33:31 [INFO] Settings saved: DarkMode=True CmsSnapshotEnabled=True
+2026-04-15 22:33:37 [INFO] Show-MainWindow: ShowDialog returned
+2026-04-15 22:33:37 [INFO] Main window closed
+2026-04-15 22:33:37 [INFO] App exiting

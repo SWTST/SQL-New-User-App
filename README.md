@@ -1,8 +1,8 @@
-# SQL New User Application
+# SQL User Management
 
-A Windows PowerShell + WPF desktop app for provisioning SQL Server logins,
-database users, and role memberships across one or more SQL instances in a
-single action.
+A Windows PowerShell + WPF desktop app for managing SQL Server access:
+create/modify logins, database users, and role memberships across one or
+more SQL instances in a single action.
 
 ## What it does
 1. Captures a target user (Windows or SQL auth) via a small login dialog.

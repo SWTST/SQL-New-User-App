@@ -1,0 +1,16 @@
+﻿2026-04-14 23:47:09 [INFO] App starting. User=steve Host=DESKTOP-AD0K85U
+2026-04-14 23:47:11 [INFO] Provisioning module imported from E:\source\repo\SQL-New-User-App\source\UI\..\Provisioning\Provisioning.psm1
+2026-04-14 23:47:11 [INFO] Showing login dialog
+2026-04-14 23:55:18 [INFO] OK clicked. Raw text='DESKTOP-AD0K85U\steve'
+2026-04-14 23:55:18 [INFO] OK handler set NewUserLogin='DESKTOP-AD0K85U\steve' AuthType='Windows'
+2026-04-14 23:55:19 [INFO] Login dialog closed. NewUserLogin='DESKTOP-AD0K85U\steve' AuthType='Windows'
+2026-04-14 23:55:19 [INFO] Opening main window
+2026-04-14 23:55:19 [INFO] Show-MainWindow: loading XAML
+2026-04-14 23:55:19 [INFO] Show-MainWindow: XAML loaded, wiring controls
+2026-04-14 23:55:19 [INFO] Show-MainWindow: calling ShowDialog
+2026-04-14 23:55:19 [INFO] Main window Loaded event fired
+2026-04-14 23:57:08 [INFO] OK clicked. Raw text='DESKTOP-AD0K85U\steve'
+2026-04-14 23:57:08 [INFO] OK handler set NewUserLogin='DESKTOP-AD0K85U\steve' AuthType='Windows'
+2026-04-14 23:57:34 [INFO] Show-MainWindow: ShowDialog returned
+2026-04-14 23:57:34 [INFO] Main window closed
+2026-04-14 23:57:34 [INFO] App exiting

@@ -178,6 +178,157 @@ function Grant-DatabaseRole {
     }
 }
 
+function Get-AllServerLogins {
+    param([string]$Server)
+    Get-DbaLogin -SqlInstance $Server |
+    Where-Object { -not $_.IsSystemObject } |
+    Select-Object -ExpandProperty Name |
+    Sort-Object
+}
+
+function Get-UserAccess {
+    param(
+        [string]$Server,
+        [string]$Login
+    )
+
+    $serverRoles = @()
+    try {
+        $serverRoles = @(
+            Get-DbaServerRoleMember -SqlInstance $Server |
+            Where-Object { $_.Login -eq $Login -or $_.Name -eq $Login } |
+            Select-Object -ExpandProperty Role -Unique
+        )
+    }
+    catch { }
+
+    $dbRoles = @{}
+    foreach ($db in (Get-Databases -Server $Server)) {
+        try {
+            $user = Get-DbaDbUser -SqlInstance $Server -Database $db.Name |
+            Where-Object { $_.Login -eq $Login -or $_.Name -eq $Login } |
+            Select-Object -First 1
+            if (-not $user) { continue }
+            $memberRoles = @(
+                Get-DbaDbRoleMember -SqlInstance $Server -Database $db.Name |
+                Where-Object { $_.UserName -eq $user.Name } |
+                Select-Object -ExpandProperty Role -Unique
+            )
+            if ($memberRoles.Count -gt 0) { $dbRoles[$db.Name] = $memberRoles }
+        }
+        catch { }
+    }
+
+    return @{ ServerRoles = $serverRoles; DatabaseRoles = $dbRoles }
+}
+
+function Revoke-ServerRole {
+    param(
+        [string]$Server,
+        [string]$Login,
+        [string[]]$Roles
+    )
+    if (-not $Roles -or $Roles.Count -eq 0) { return }
+    foreach ($role in $Roles) {
+        try {
+            Remove-DbaServerRoleMember -SqlInstance $Server -ServerRole $role `
+                -Login $Login -Confirm:$false -ErrorAction Stop | Out-Null
+            Write-Host "Revoked server role '$role' from '$Login' on '$Server'."
+        }
+        catch {
+            Write-Warning "Failed to revoke server role '$role' from '$Login' on '$Server': $_"
+        }
+    }
+}
+
+function Revoke-DatabaseRole {
+    param(
+        [string]$Server,
+        [string]$Database,
+        [string]$User,
+        [string[]]$Roles
+    )
+    if (-not $Roles -or $Roles.Count -eq 0) { return }
+    foreach ($role in $Roles) {
+        try {
+            Remove-DbaDbRoleMember -SqlInstance $Server -Database $Database `
+                -Role $role -User $User -Confirm:$false -ErrorAction Stop | Out-Null
+            Write-Host "Revoked DB role '$role' from '$User' in '$Database' on '$Server'."
+        }
+        catch {
+            Write-Warning "Failed to revoke DB role '$role' from '$User' in '$Database': $_"
+        }
+    }
+}
+
+function Get-AccessDiff {
+    param(
+        [hashtable]$Current,
+        [hashtable]$Desired
+    )
+    $curServerRoles = @($Current.ServerRoles)
+    $desServerRoles = @($Desired.ServerRoles)
+    $addServer = @($desServerRoles | Where-Object { $curServerRoles -notcontains $_ })
+    $removeServer = @($curServerRoles | Where-Object { $desServerRoles -notcontains $_ })
+
+    $addDb = @{}
+    $removeDb = @{}
+    $allDbs = @(($Current.DatabaseRoles.Keys + $Desired.DatabaseRoles.Keys) | Sort-Object -Unique)
+    foreach ($db in $allDbs) {
+        $cur = if ($Current.DatabaseRoles.ContainsKey($db)) { @($Current.DatabaseRoles[$db]) } else { @() }
+        $des = if ($Desired.DatabaseRoles.ContainsKey($db)) { @($Desired.DatabaseRoles[$db]) } else { @() }
+        $a = @($des | Where-Object { $cur -notcontains $_ })
+        $r = @($cur | Where-Object { $des -notcontains $_ })
+        if ($a.Count -gt 0) { $addDb[$db] = $a }
+        if ($r.Count -gt 0) { $removeDb[$db] = $r }
+    }
+    return @{
+        AddServerRoles    = $addServer
+        RemoveServerRoles = $removeServer
+        AddDbRoles        = $addDb
+        RemoveDbRoles     = $removeDb
+    }
+}
+
+function Invoke-UserAccessDiff {
+    param(
+        [string]$Server,
+        [string]$Login,
+        [ValidateSet('Windows', 'SQL')]
+        [string]$AuthType = 'Windows',
+        [System.Security.SecureString]$SecurePassword = $null,
+        [hashtable]$Desired,
+        [hashtable]$Diff
+    )
+    Write-Host "=== Applying changes for '$Login' on '$Server' ==="
+
+    # Ensure login exists only if we have something to grant
+    $hasAdds = ($Diff.AddServerRoles.Count -gt 0) -or ($Diff.AddDbRoles.Keys.Count -gt 0)
+    if ($hasAdds) {
+        New-ServerLogin -Server $Server -Login $Login -AuthType $AuthType -SecurePassword $SecurePassword
+    }
+
+    # Revokes first (safer — shrink footprint before adding)
+    Revoke-ServerRole -Server $Server -Login $Login -Roles $Diff.RemoveServerRoles
+    foreach ($db in $Diff.RemoveDbRoles.Keys) {
+        Revoke-DatabaseRole -Server $Server -Database $db -User $Login -Roles $Diff.RemoveDbRoles[$db]
+    }
+
+    # Grants
+    Grant-ServerRole -Server $Server -Login $Login -Roles $Diff.AddServerRoles
+    foreach ($db in $Diff.AddDbRoles.Keys) {
+        $dbExists = Get-Databases -Server $Server | Where-Object { $_.Name -eq $db }
+        if (-not $dbExists) {
+            Write-Warning "Database '$db' not found on '$Server'. Skipping."
+            continue
+        }
+        New-DatabaseUser -Server $Server -Database $db -Login $Login
+        Grant-DatabaseRole -Server $Server -Database $db -User $Login -Roles $Diff.AddDbRoles[$db]
+    }
+
+    Write-Host "=== Done for '$Login' on '$Server' ==="
+}
+
 function Invoke-UserProvisioning {
     param(
         [string]$Server,

@@ -1,0 +1,48 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        Title="Access Templates"
+        Height="480" Width="520"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Existing templates"
+                   FontWeight="Bold" Margin="0,0,0,4"/>
+        <ListBox Grid.Row="1" Name="TemplatesList"
+                 BorderThickness="1" BorderBrush="#CCCCCC"/>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal"
+                    HorizontalAlignment="Right" Margin="0,6,0,0">
+            <Button Name="ApplyBtn"  Content="Apply Blueprint" Width="140" Margin="0,0,4,0"/>
+            <Button Name="DeleteBtn" Content="Delete"                  Width="80"/>
+        </StackPanel>
+
+        <Separator Grid.Row="3"/>
+
+        <StackPanel Grid.Row="4">
+            <TextBlock Text="Save all ticked servers' selections as a new blueprint"
+                       FontWeight="Bold" Margin="0,0,0,4"/>
+            <DockPanel>
+                <Button Name="SaveBtn" DockPanel.Dock="Right" Content="Save"
+                        Width="80" Margin="4,0,0,0"/>
+                <TextBox Name="NewNameBox"/>
+            </DockPanel>
+            <TextBlock Name="SaveHint" Text=""
+                       Foreground="#666666" FontSize="11" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <Separator Grid.Row="5"/>
+
+        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Name="CloseBtn" Content="Close" Width="80"/>
+        </StackPanel>
+    </Grid>
+</Window>

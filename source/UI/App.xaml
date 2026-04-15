@@ -1,10 +1,22 @@
 ﻿<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        Title="SQL User Provisioning"
+        Title="SQL User Management"
         Height="700" Width="1100"
         WindowStartupLocation="CenterScreen"
         MinHeight="500" MinWidth="800">
 
     <DockPanel>
+
+        <!-- Editing-user header -->
+        <Border DockPanel.Dock="Top" Background="#2C3E50" Padding="10,6,10,6">
+            <DockPanel>
+                <TextBlock Text="Editing:" Foreground="#BDC3C7"
+                           FontSize="13" VerticalAlignment="Center"
+                           Margin="0,0,8,0"/>
+                <TextBlock Name="EditingUserText" Text="(no user selected)"
+                           Foreground="White" FontSize="15" FontWeight="Bold"
+                           VerticalAlignment="Center"/>
+            </DockPanel>
+        </Border>
 
         <!-- Status Bar -->
         <StatusBar DockPanel.Dock="Bottom">
@@ -22,8 +34,10 @@
                 BorderBrush="#CCCCCC" Padding="4,4,4,4">
             <DockPanel>
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                    <Button Name="CurrentLoginBtn"  Content="Current Login"      Width="110" Margin="0,0,4,0"/>
-                    <Button Name="AssignBtn"         Content="Assign Permissions" Width="140"/>
+                    <Button Name="SettingsBtn"      Content="Settings..."        Width="90"  Margin="0,0,4,0"/>
+                    <Button Name="TemplatesBtn"     Content="Templates..."       Width="100" Margin="0,0,4,0"/>
+                    <Button Name="SelectUserBtn"    Content="Select User..."     Width="110" Margin="0,0,4,0"/>
+                    <Button Name="AssignBtn"        Content="Apply Changes"      Width="140"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Button Name="ExitBtn"           Content="Exit"                  Width="80"  Margin="0,0,4,0"/>
@@ -82,7 +96,7 @@
                 <GridSplitter Grid.Row="2" Height="4" HorizontalAlignment="Stretch"
                               Background="#DDDDDD"/>
 
-                <!-- Query Window -->
+                <!-- User List -->
                 <Grid Grid.Row="3">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -93,15 +107,14 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Query Window"
-                               VerticalAlignment="Center" Margin="0,2,0,2"/>
-                    <Button Grid.Row="0" Grid.Column="1" Name="ExecuteQueryBtn"
-                            Content="Execute" Width="80" Margin="4,2,0,2"/>
-                    <TextBox Grid.Row="1" Grid.ColumnSpan="2" Name="QueryBox"
-                             AcceptsReturn="True" TextWrapping="Wrap"
-                             VerticalScrollBarVisibility="Auto"
-                             FontFamily="Consolas" FontSize="12"
-                             BorderThickness="1" BorderBrush="#CCCCCC"/>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Existing Logins on Server"
+                               FontWeight="Bold" VerticalAlignment="Center" Margin="0,2,0,2"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Name="UserListHint"
+                               Text="(click a login to load its current access)"
+                               Foreground="#666666" VerticalAlignment="Center" Margin="4,2,0,2"/>
+                    <ListBox Grid.Row="1" Grid.ColumnSpan="2" Name="UserListBox"
+                             BorderThickness="1" BorderBrush="#CCCCCC"
+                             FontFamily="Consolas" FontSize="12"/>
                 </Grid>
             </Grid>
 

@@ -1,0 +1,21 @@
+2026-04-15 22:54:41 [INFO] App starting. User=steve Host=DESKTOP-AD0K85U
+2026-04-15 22:54:41 [INFO] Provisioning module imported from E:\source\repo\SQL-New-User-App\source\UI\..\Provisioning\Provisioning.psm1
+2026-04-15 22:54:41 [INFO] Showing login dialog
+2026-04-15 22:54:43 [INFO] OK clicked. Raw text='DESKTOP-AD0K85U\steve'
+2026-04-15 22:54:43 [INFO] OK handler set NewUserLogin='DESKTOP-AD0K85U\steve' AuthType='Windows'
+2026-04-15 22:54:43 [INFO] Login dialog closed. NewUserLogin='DESKTOP-AD0K85U\steve' AuthType='Windows'
+2026-04-15 22:54:43 [INFO] Opening main window
+2026-04-15 22:54:43 [INFO] Show-MainWindow: loading XAML
+2026-04-15 22:54:43 [INFO] Show-MainWindow: XAML loaded, wiring controls
+2026-04-15 22:54:43 [INFO] Show-MainWindow: calling ShowDialog
+2026-04-15 22:54:44 [INFO] Main window Loaded event fired
+2026-04-15 22:54:44 [INFO] CMS snapshot saved (2 servers)
+2026-04-15 22:54:51 [INFO] Settings Save clicked: darkCheck.IsChecked=True snapCheck.IsChecked=True
+2026-04-15 22:54:51 [INFO] Settings saved: DarkMode=True CmsSnapshotEnabled=True
+2026-04-15 22:54:55 [INFO] Settings Save clicked: darkCheck.IsChecked=True snapCheck.IsChecked=False
+2026-04-15 22:54:55 [INFO] Settings saved: DarkMode=True CmsSnapshotEnabled=False
+2026-04-15 22:54:58 [INFO] Settings Save clicked: darkCheck.IsChecked=False snapCheck.IsChecked=True
+2026-04-15 22:54:58 [INFO] Settings saved: DarkMode=False CmsSnapshotEnabled=True
+2026-04-15 22:55:04 [INFO] Show-MainWindow: ShowDialog returned
+2026-04-15 22:55:04 [INFO] Main window closed
+2026-04-15 22:55:04 [INFO] App exiting

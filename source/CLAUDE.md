@@ -1,10 +1,11 @@
-# SQL New User App — Context for Claude
+# SQL User Management — Context for Claude
 
 ## Purpose
-Windows PowerShell + WPF desktop app for DBAs/operators. Provisions a SQL
-Server login + database users + role memberships for one target user across
-one or more SQL instances in a single action. Being prepared for handover to
-a senior colleague — ease-of-use is the #1 priority.
+Windows PowerShell + WPF desktop app for DBAs/operators. Manages SQL Server
+access: creates/modifies logins, database users, and role memberships for a
+target user across one or more SQL instances in a single action. Pivoted from
+"new user only" to full user-management (view + edit existing logins).
+Being prepared for handover to a senior colleague — ease-of-use is the #1 priority.
 
 ## Tech stack
 - Windows PowerShell 5.1 (WPF via `PresentationFramework`)
@@ -43,11 +44,18 @@ inside the Assign handler and forwarded to `Write-Log`.
 
 ## Status (2026-04-14)
 Working end-to-end for Windows and SQL auth. Confirmed:
-- Server role grants succeed
+- Server role grants + revokes succeed
 - Database user creation succeeds
-- Database role grants succeed
+- Database role grants + revokes succeed
 - Per-server selection persists across dropdown switches
 - Unticking a server discards its selections
+- User list (bottom-center panel) shows all existing logins on the current
+  server; clicking one loads its current access into the ticks
+- Apply Changes runs in diff mode: computes add/remove per server, shows
+  a confirmation dialog summarising `+` and `-` lines, then applies
+- Header bar at top of main window shows "Editing: <login> (<auth> Auth)"
+  plus reflected in window Title
+- Single "Select User..." button replaces the old New User / Current Login pair
 
 ## Critical gotchas (learned the hard way)
 1. **UTF-8 BOM required** on all `.ps1` / `.psm1` / `.xaml` files. PS 5.1
@@ -66,20 +74,28 @@ Working end-to-end for Windows and SQL auth. Confirmed:
    redirection on the call site to pipe into our file logger.
 5. `Get-ServerRoles` used to leak empty rows via `$roles | Select-Object -Property Role`
    (the property is `Name`, not `Role`). Removed — don't re-add.
+6. **WPF CheckBox `_` is an accelerator char** — `Content="db_datareader"`
+   renders as `dbdatareader` with `d` underlined. Fix: wrap text in a
+   `TextBlock` element and set that as the CheckBox Content. Role identity
+   is stored in `$cb.Tag` (not `.Content`) — all comparators use `.Tag`.
+   See `New-LiteralCheckBox` helper in App.ps1.
 
 ## Still to do (priority order)
 1. **Access templates** — JSON-backed, editable from the UI. Save-current-selection,
    apply-template, delete-template. Stored in `config/access-templates.json`.
-   **Keep per-server granularity** (matches the selection model above).
+   Per-server role bundle shape `@{ ServerRoles=[]; DatabaseRoles=@{db=[roles]} }`.
+   Apply to the currently-selected server in the dropdown (DBs not present get skipped).
 2. **"Run as other user" connection context** — login dialog should optionally
    accept alternate Windows creds used when connecting TO SQL via dbatools
-   (separate from the target login being provisioned). Pass as
+   (separate from the target login being managed). Pass as
    `-SqlCredential` (PSCredential) to dbatools cmdlets.
 3. **CMS host to config + JSON fallback** — `Get-AllServers` currently
    hardcodes `DESKTOP-AD0K85U\MSSQL` as CMS. Move to `config/app-config.json`,
    auto-fallback to `config/servers.json` if CMS unreachable.
-4. **README.md + docs/** for handover (started — see repo root).
+4. **Operator guide with screenshots** (`docs/`) for handover.
 5. Module manifest (`.psd1`) + `Export-ModuleMember`. Low priority.
+6. Remove `Invoke-UserProvisioning` once we're sure nothing else depends on it.
+   Low priority — harmless dead code.
 
 ## Conventions
 - Use dbatools for all SQL; do not hand-roll `Invoke-Sqlcmd`.

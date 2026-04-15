@@ -1,0 +1,18 @@
+2026-04-15 21:40:17 [INFO] App starting. User=steve Host=DESKTOP-AD0K85U
+2026-04-15 21:40:17 [INFO] Provisioning module imported from E:\source\repo\SQL-New-User-App\source\UI\..\Provisioning\Provisioning.psm1
+2026-04-15 21:40:17 [INFO] Showing login dialog
+2026-04-15 21:40:20 [INFO] OK clicked. Raw text='DESKTOP-AD0K85U\steve'
+2026-04-15 21:40:20 [INFO] OK handler set NewUserLogin='DESKTOP-AD0K85U\steve' AuthType='Windows'
+2026-04-15 21:40:20 [INFO] Login dialog closed. NewUserLogin='DESKTOP-AD0K85U\steve' AuthType='Windows'
+2026-04-15 21:40:20 [INFO] Opening main window
+2026-04-15 21:40:20 [INFO] Show-MainWindow: loading XAML
+2026-04-15 21:40:20 [INFO] Show-MainWindow: XAML loaded, wiring controls
+2026-04-15 21:40:20 [INFO] Show-MainWindow: calling ShowDialog
+2026-04-15 21:40:20 [INFO] Main window Loaded event fired
+2026-04-15 22:02:10 [INFO] Saved template 'Test' from DESKTOP-AD0K85U\MSSQL3
+2026-04-15 22:02:35 [INFO] Applied template 'Test' to DESKTOP-AD0K85U\MSSQL3.
+2026-04-15 22:02:41 [INFO] Applied template 'Test' to DESKTOP-AD0K85U\MSSQL2. Skipped DBs not on server: InstanceTest1
+2026-04-15 22:08:30 [INFO] Deleted template 'Test'
+2026-04-15 22:08:50 [INFO] Show-MainWindow: ShowDialog returned
+2026-04-15 22:08:50 [INFO] Main window closed
+2026-04-15 22:08:50 [INFO] App exiting

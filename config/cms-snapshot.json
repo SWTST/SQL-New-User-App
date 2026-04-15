@@ -1,0 +1,11 @@
+{
+  "Servers": [
+    {
+      "ServerName": "DESKTOP-AD0K85U\\MSSQL2"
+    },
+    {
+      "ServerName": "DESKTOP-AD0K85U\\MSSQL3"
+    }
+  ],
+  "CapturedAt": "2026-04-15T22:54:44.2079818+01:00"
+}
