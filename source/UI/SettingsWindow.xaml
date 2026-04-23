@@ -1,10 +1,12 @@
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         Title="Settings"
-        Height="340" Width="460"
+        Height="420" Width="480"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
     <Grid Margin="14">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="12"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="12"/>
             <RowDefinition Height="Auto"/>
@@ -22,20 +24,29 @@
         <Separator Grid.Row="1"/>
 
         <StackPanel Grid.Row="2">
+            <TextBlock Text="CMS server" FontWeight="Bold" Margin="0,0,0,4"/>
+            <TextBlock Text="SQL instance hosting the Central Management Server registry"
+                       Foreground="#666666" FontSize="11" Margin="0,0,0,4"/>
+            <TextBox Name="CmsInstanceBox"/>
+        </StackPanel>
+
+        <Separator Grid.Row="3"/>
+
+        <StackPanel Grid.Row="4">
             <TextBlock Text="CMS redundancy" FontWeight="Bold" Margin="0,0,0,4"/>
             <CheckBox Name="CmsSnapshotCheck"
                       Content="Snapshot CMS server list and use it as fallback if CMS is unreachable"/>
             <TextBlock Name="SnapshotInfo" Text="" Foreground="#666666" FontSize="11" Margin="20,4,0,0"/>
         </StackPanel>
 
-        <Separator Grid.Row="3"/>
+        <Separator Grid.Row="5"/>
 
-        <StackPanel Grid.Row="4">
+        <StackPanel Grid.Row="6">
             <TextBlock Text="Logs" FontWeight="Bold" Margin="0,0,0,4"/>
             <TextBlock Name="LogPathText" Text="" Foreground="#666666" FontSize="11"/>
         </StackPanel>
 
-        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Name="SaveBtn"   Content="Save"   Width="80" Margin="0,0,4,0"/>
             <Button Name="CancelBtn" Content="Cancel" Width="80"/>
         </StackPanel>

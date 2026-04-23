@@ -17,8 +17,12 @@ Being prepared for handover to a senior colleague — ease-of-use is the #1 prio
 - `source/UI/App.ps1` — entry point; loads XAML, wires events, holds script-scope state
 - `source/UI/App.xaml` — main window
 - `source/UI/LoginWindow.xaml` — target-user capture dialog (shown first)
+- `source/UI/TemplatesWindow.xaml` — access templates dialog
+- `source/UI/SettingsWindow.xaml` — settings dialog (dark mode, CMS snapshot)
 - `config/servers.json` — fallback/static server list (empty)
-- `config/access-templates.json` — role bundles (empty, NOT YET IMPLEMENTED)
+- `config/access-templates.json` — multi-server blueprints: `{Name:{Servers:{srv:{ServerRoles:[],DatabaseRoles:{db:[]}}}}}`
+- `config/app-config.json` — `{DarkMode:bool, CmsSnapshotEnabled:bool}`
+- `config/cms-snapshot.json` — `{CapturedAt, Servers:[{ServerName}]}` — auto-saved on CMS success when enabled, used as fallback on CMS failure
 - `logs/app-YYYYMMDD-HHMMSS.log` — per-run log (created on launch)
 - `app-plan/initial-plan.md` — feature checklist
 
@@ -42,29 +46,38 @@ Being prepared for handover to a senior colleague — ease-of-use is the #1 prio
 module output (Write-Host / Write-Warning / errors) is captured via `*>&1` redirection
 inside the Assign handler and forwarded to `Write-Log`.
 
-## Status (2026-04-14)
-Working end-to-end for Windows and SQL auth. Confirmed:
-- Server role grants + revokes succeed
+## Status (2026-04-23)
+Working end-to-end for Windows and SQL auth. Confirmed earlier:
+- Server + database role grants/revokes succeed
 - Database user creation succeeds
-- Database role grants + revokes succeed
-- Per-server selection persists across dropdown switches
-- Unticking a server discards its selections
-- User list (bottom-center panel) shows all existing logins on the current
-  server; clicking one loads its current access into the ticks
-- Apply Changes runs in diff mode: computes add/remove per server, shows
-  a confirmation dialog summarising `+` and `-` lines, then applies
-- Header bar at top of main window shows "Editing: <login> (<auth> Auth)"
-  plus reflected in window Title
-- Single "Select User..." button replaces the old New User / Current Login pair
+- Per-server selection persists across dropdown switches; unticking discards
+- User list clicks load existing access into ticks
+- Apply Changes runs in diff mode with confirmation dialog
+- "Editing: <login>" header + window title
+- Single "Select User..." button
+
+**Added 2026-04-23 session 3:**
+- **Multi-server blueprint templates** — `TemplatesWindow.xaml` + `Show-TemplatesDialog`. Save captures all ticked servers' selections; Apply ticks each server in the template and populates selections, skipping servers not in CMS + DBs not on each target (both logged).
+- **SettingsWindow** — `Show-SettingsDialog`. Dark mode toggle, CMS snapshot toggle, shows last snapshot timestamp + current log path.
+- **`Set-Theme`** — applies via `TextElement.Foreground` attached property on Window (inheritable, cascades to dynamic controls) + implicit styles on Window.Resources for ListBox/TextBox/Button/ComboBox/etc.
+- **CMS snapshot fallback** — `Invoke-PopulateServerList` tries CMS, saves snapshot on success when toggle on, falls back to snapshot on CMS failure. Snapshot also captured immediately when toggle flipped on if server list is already loaded (via `$script:LastLoadedServers`).
+
+**Pending user verification (end of session 3):** Dark-mode-applies-to-whole-app and snapshot-fallback-loads-servers fixes both shipped after discovering `.GetNewClosure()` isolates `$script:` reads as well as writes (see gotcha #2). User hadn't retested at session end.
 
 ## Critical gotchas (learned the hard way)
 1. **UTF-8 BOM required** on all `.ps1` / `.psm1` / `.xaml` files. PS 5.1
    reads BOMless files as ANSI and corrupts em-dash (`—`) characters into
    `�?`, causing parser errors. If adding new files, save with UTF-8 BOM.
-2. **Do NOT use `.GetNewClosure()` on WPF event handlers** that write to
-   `$script:` scope. It creates an isolated closure scope — the `$script:` write
-   goes into the closure, not the real script scope, and the value vanishes
-   when the handler returns. Attach the scriptblock directly.
+2. **Do NOT use `.GetNewClosure()` on WPF event handlers** that touch
+   `$script:` scope AT ALL — reads or writes. Creates an isolated scope:
+   writes vanish (value goes into closure's own script scope); reads return
+   `$null`/empty (closure's script scope has no value). Observed:
+   (a) `$script:NewUserLogin` empty after login OK handler, (b) Settings Save
+   handler's `Set-Theme -Window $script:MainWindow` silently no-op'd because
+   `$script:MainWindow` resolved to `$null` → main window wasn't themed, only
+   the settings dialog was. Pattern: stash dialog-local refs in
+   `$script:_PrefixedVars` right after `FindName`, attach handlers directly
+   without `.GetNewClosure()`. See `Show-SettingsDialog`.
 3. **dbatools needs `-Confirm:$false`** on `Add-DbaServerRoleMember`,
    `Add-DbaDbRoleMember`, `New-DbaLogin`, `New-DbaDbUser` when called from
    a WPF/non-interactive context. Without it they throw:
@@ -81,17 +94,18 @@ Working end-to-end for Windows and SQL auth. Confirmed:
    See `New-LiteralCheckBox` helper in App.ps1.
 
 ## Still to do (priority order)
-1. **Access templates** — JSON-backed, editable from the UI. Save-current-selection,
-   apply-template, delete-template. Stored in `config/access-templates.json`.
-   Per-server role bundle shape `@{ ServerRoles=[]; DatabaseRoles=@{db=[roles]} }`.
-   Apply to the currently-selected server in the dropdown (DBs not present get skipped).
-2. **"Run as other user" connection context** — login dialog should optionally
+1. **Verify dark mode + snapshot fallback fixes** — user hadn't retested at
+   end of session 3 after switching Settings dialog from `.GetNewClosure()`
+   to `$script:_Settings*` stashing. If still broken, first add Write-Log
+   diagnostics inside `Show-SettingsDialog` Save handler showing
+   `$script:MainWindow` is non-null and `$script:LastLoadedServers.Count > 0`.
+2. **Move CMS host to `config/app-config.json`** — currently hardcoded
+   `DESKTOP-AD0K85U\MSSQL` in `Get-AllServers`. Add a `CmsInstance` field to
+   app-config + a setting in SettingsWindow.
+3. **"Run as other user" connection context** — login dialog should optionally
    accept alternate Windows creds used when connecting TO SQL via dbatools
    (separate from the target login being managed). Pass as
    `-SqlCredential` (PSCredential) to dbatools cmdlets.
-3. **CMS host to config + JSON fallback** — `Get-AllServers` currently
-   hardcodes `DESKTOP-AD0K85U\MSSQL` as CMS. Move to `config/app-config.json`,
-   auto-fallback to `config/servers.json` if CMS unreachable.
 4. **Operator guide with screenshots** (`docs/`) for handover.
 5. Module manifest (`.psd1`) + `Export-ModuleMember`. Low priority.
 6. Remove `Invoke-UserProvisioning` once we're sure nothing else depends on it.

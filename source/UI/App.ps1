@@ -107,7 +107,7 @@ function Invoke-PopulateServerList {
     $servers = $null
     $fromSnapshot = $false
     try {
-        $servers = Get-AllServers
+        $servers = Get-AllServers -SqlInstance $cfg.CmsInstance
         if ($servers -and $servers.Count -gt 0) {
             $script:LastLoadedServers = @($servers)
         }
@@ -338,15 +338,21 @@ function Get-CmsSnapshotPath {
 
 function Get-AppConfig {
     $path = Get-AppConfigPath
-    $defaults = @{ DarkMode = $false; CmsSnapshotEnabled = $false }
+    $defaults = @{
+        DarkMode           = $false
+        CmsSnapshotEnabled = $false
+        CmsInstance        = 'DESKTOP-AD0K85U\MSSQL'
+    }
     if (-not (Test-Path $path)) { return $defaults }
     $raw = Get-Content $path -Raw -ErrorAction SilentlyContinue
     if ([string]::IsNullOrWhiteSpace($raw)) { return $defaults }
     try {
         $obj = $raw | ConvertFrom-Json
+        $cms = if ([string]::IsNullOrWhiteSpace($obj.CmsInstance)) { $defaults.CmsInstance } else { [string]$obj.CmsInstance }
         return @{
             DarkMode           = [bool]$obj.DarkMode
             CmsSnapshotEnabled = [bool]$obj.CmsSnapshotEnabled
+            CmsInstance        = $cms
         }
     }
     catch {
@@ -484,7 +490,9 @@ function Show-SettingsDialog {
     $script:_SettingsDlg = $dlg
     $script:_SettingsDarkCheck = $dlg.FindName("DarkModeCheck")
     $script:_SettingsSnapCheck = $dlg.FindName("CmsSnapshotCheck")
+    $script:_SettingsCmsBox = $dlg.FindName("CmsInstanceBox")
     $script:_SettingsPrevSnap = [bool]$cfg.CmsSnapshotEnabled
+    $script:_SettingsPrevCms = [string]$cfg.CmsInstance
 
     $snapInfo = $dlg.FindName("SnapshotInfo")
     $logPath = $dlg.FindName("LogPathText")
@@ -493,6 +501,7 @@ function Show-SettingsDialog {
 
     $script:_SettingsDarkCheck.IsChecked = $cfg.DarkMode
     $script:_SettingsSnapCheck.IsChecked = $cfg.CmsSnapshotEnabled
+    $script:_SettingsCmsBox.Text = $cfg.CmsInstance
 
     $snapPath = Get-CmsSnapshotPath
     if (Test-Path $snapPath) {
@@ -507,8 +516,14 @@ function Show-SettingsDialog {
     $saveBtn.Add_Click({
             $dark = [bool]$script:_SettingsDarkCheck.IsChecked
             $snap = [bool]$script:_SettingsSnapCheck.IsChecked
-            Write-Log "Settings Save clicked: dark=$dark snap=$snap MainWin=$($null -ne $script:MainWindow) LastLoaded=$($script:LastLoadedServers.Count)"
-            Save-AppConfig @{ DarkMode = $dark; CmsSnapshotEnabled = $snap }
+            $cms = $script:_SettingsCmsBox.Text.Trim()
+            if ([string]::IsNullOrWhiteSpace($cms)) {
+                [System.Windows.MessageBox]::Show("CMS server cannot be empty.",
+                    "Validation", 'OK', 'Warning') | Out-Null
+                return
+            }
+            Write-Log "Settings Save clicked: dark=$dark snap=$snap cms='$cms' MainWin=$($null -ne $script:MainWindow) LastLoaded=$($script:LastLoadedServers.Count)"
+            Save-AppConfig @{ DarkMode = $dark; CmsSnapshotEnabled = $snap; CmsInstance = $cms }
             Set-Theme -Window $script:MainWindow -Dark:$dark
             if ($snap -and -not $script:_SettingsPrevSnap -and $script:LastLoadedServers.Count -gt 0) {
                 try {
@@ -516,6 +531,10 @@ function Show-SettingsDialog {
                     Write-Log "CMS snapshot captured on toggle-on ($($script:LastLoadedServers.Count) servers)"
                 }
                 catch { Write-Log "CMS snapshot save on toggle failed: $_" 'ERROR' }
+            }
+            if ($cms -ne $script:_SettingsPrevCms) {
+                Write-Log "CMS instance changed '$($script:_SettingsPrevCms)' -> '$cms'; reloading server list"
+                try { Invoke-PopulateServerList } catch { Write-Log "Reload after CMS change failed: $_" 'ERROR' }
             }
             $script:_SettingsDlg.Close()
         })

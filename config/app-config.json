@@ -1,4 +1,5 @@
-{
-  "DarkMode": false,
-  "CmsSnapshotEnabled": true
+﻿{
+    "DarkMode":  true,
+    "CmsInstance":  "DESKTOP-AD0K85U\\MSSQL",
+    "CmsSnapshotEnabled":  true
 }

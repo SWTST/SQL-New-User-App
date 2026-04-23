@@ -1,0 +1,16 @@
+2026-04-23 19:11:41 [INFO] App starting. User=steve Host=DESKTOP-AD0K85U
+2026-04-23 19:11:41 [INFO] Provisioning module imported from E:\source\repo\SQL-New-User-App\source\UI\..\Provisioning\Provisioning.psm1
+2026-04-23 19:11:41 [INFO] Showing login dialog
+2026-04-23 19:11:42 [INFO] OK clicked. Raw text='DESKTOP-AD0K85U\steve'
+2026-04-23 19:11:42 [INFO] OK handler set NewUserLogin='DESKTOP-AD0K85U\steve' AuthType='Windows'
+2026-04-23 19:11:42 [INFO] Login dialog closed. NewUserLogin='DESKTOP-AD0K85U\steve' AuthType='Windows'
+2026-04-23 19:11:42 [INFO] Opening main window
+2026-04-23 19:11:42 [INFO] Show-MainWindow: loading XAML
+2026-04-23 19:11:42 [INFO] Show-MainWindow: XAML loaded, wiring controls
+2026-04-23 19:11:42 [INFO] Show-MainWindow: calling ShowDialog
+2026-04-23 19:11:42 [INFO] Main window Loaded event fired
+2026-04-23 19:11:42 [ERROR] CMS unreachable: Cannot process argument transformation on parameter 'SqlInstance'. Cannot convert value "DESKTOP-AD0K85U\2MSSQL" to type "Dataplat.Dbatools.Parameter.DbaInstanceParameter[]". Error: "Cannot convert value "DESKTOP-AD0K85U\2MSSQL" to type "Dataplat.Dbatools.Parameter.DbaInstanceParameter". Error: "Failed to parse instance name: DESKTOP-AD0K85U\2MSSQL. Computer Name: DESKTOP-AD0K85U, Instance 2MSSQL""
+2026-04-23 19:11:42 [INFO] Loaded 2 server(s) from CMS snapshot
+2026-04-23 19:11:51 [INFO] Show-MainWindow: ShowDialog returned
+2026-04-23 19:11:51 [INFO] Main window closed
+2026-04-23 19:11:51 [INFO] App exiting
