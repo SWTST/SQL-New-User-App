@@ -22,6 +22,11 @@ $script:NewUserLogin = $null
 $script:NewUserPassword = $null   # SecureString or $null for Windows auth
 $script:AuthType = 'Windows'
 
+# Optional alternate account used ONLY for connecting to target SQL instances
+# (dbatools -SqlCredential). Separate from the target login being managed.
+# $null = connect using the operator's current Windows context.
+$script:SqlCredential = $null
+
 # Per-server selections: @{ serverName = @{ ServerRoles = @(); DatabaseRoles = @{ db = @(roles) } } }
 $script:ServerSelections = @{}
 $script:CurrentServer = $null
@@ -275,7 +280,7 @@ function Invoke-PopulateDatabaseCards([string]$Server) {
             $sp.Children.Add($hdr) | Out-Null
 
             try {
-                $roles = Get-DbaDbRole -SqlInstance $Server -Database $dbName
+                $roles = Get-DbRoleList -Server $Server -Database $dbName
                 foreach ($role in $roles) {
                     $cb = New-LiteralCheckBox -Text $role.Name -Tag $role.Name
                     $cb.Margin = [System.Windows.Thickness]::new(2, 1, 2, 1)
@@ -754,6 +759,11 @@ function Show-LoginDialog {
     $fillWinBtn = $dlg.FindName("CurrentLoginBtn")
     $okBtn = $dlg.FindName("OkBtn")
     $cancelBtn = $dlg.FindName("CancelBtn")
+    # Optional alternate connection credentials (connect TO SQL as another account)
+    $altCredCheck = $dlg.FindName("UseAltCredCheck")
+    $altCredRow = $dlg.FindName("AltCredRow")
+    $altUserBox = $dlg.FindName("AltUserBox")
+    $altPassBox = $dlg.FindName("AltPassBox")
 
     $userBox.Text = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
 
@@ -765,6 +775,9 @@ function Show-LoginDialog {
                 [System.Windows.Visibility]::Collapsed
             }
         })
+
+    $altCredCheck.Add_Checked({ $altCredRow.Visibility = [System.Windows.Visibility]::Visible })
+    $altCredCheck.Add_Unchecked({ $altCredRow.Visibility = [System.Windows.Visibility]::Collapsed })
 
     $fillWinBtn.Add_Click({
             $userBox.Text = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
@@ -780,6 +793,19 @@ function Show-LoginDialog {
                     [System.Windows.MessageBoxImage]::Warning)
                 return
             }
+
+            # Optional alternate connection credentials
+            if ($altCredCheck.IsChecked -and -not [string]::IsNullOrWhiteSpace($altUserBox.Text)) {
+                $script:SqlCredential = New-Object System.Management.Automation.PSCredential(
+                    $altUserBox.Text.Trim(), $altPassBox.SecurePassword)
+                Write-Log "Alternate connection credential set for '$($altUserBox.Text.Trim())'"
+            }
+            else {
+                $script:SqlCredential = $null
+                Write-Log "Using current Windows context for SQL connections"
+            }
+            Set-ConnectionCredential -Credential $script:SqlCredential
+
             $script:NewUserLogin = $user
             $script:AuthType = if ($authCombo.SelectedIndex -eq 1) { 'SQL' } else { 'Windows' }
             $script:NewUserPassword = if ($script:AuthType -eq 'SQL') { $passBox.SecurePassword } else { $null }

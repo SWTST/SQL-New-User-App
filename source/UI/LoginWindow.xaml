@@ -1,6 +1,6 @@
 ﻿<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        Title="New User Login Details"
-        Height="260" Width="380"
+        Title="User Details"
+        Height="360" Width="400"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         ShowInTaskbar="False">
@@ -9,34 +9,61 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
+        <!-- Target user this session manages -->
+        <TextBlock Grid.Row="0" Text="User to manage" FontWeight="Bold" Margin="0,0,0,6"/>
+
         <!-- Auth Type -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
             <TextBlock Text="Authentication:" Width="110" VerticalAlignment="Center"/>
-            <ComboBox Name="AuthTypeCombo" Width="210">
+            <ComboBox Name="AuthTypeCombo" Width="220">
                 <ComboBoxItem Content="Windows Authentication" IsSelected="True"/>
                 <ComboBoxItem Content="SQL Authentication"/>
             </ComboBox>
         </StackPanel>
 
         <!-- Username -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
             <TextBlock Text="Username:" Width="110" VerticalAlignment="Center"/>
-            <TextBox Name="UsernameBox" Width="210"/>
+            <TextBox Name="UsernameBox" Width="220"/>
         </StackPanel>
 
         <!-- Password (hidden for Windows Auth) -->
-        <StackPanel Grid.Row="2" Name="PasswordRow" Orientation="Horizontal"
+        <StackPanel Grid.Row="3" Name="PasswordRow" Orientation="Horizontal"
                     Margin="0,0,0,8" Visibility="Collapsed">
             <TextBlock Text="Password:" Width="110" VerticalAlignment="Center"/>
-            <PasswordBox Name="PasswordBox" Width="210"/>
+            <PasswordBox Name="PasswordBox" Width="220"/>
+        </StackPanel>
+
+        <Separator Grid.Row="4" Margin="0,4,0,8"/>
+
+        <!-- Optional: connect to SQL as a different account -->
+        <CheckBox Grid.Row="5" Name="UseAltCredCheck" Margin="0,0,0,6">
+            <TextBlock Text="Connect to SQL using different credentials"/>
+        </CheckBox>
+
+        <StackPanel Grid.Row="6" Name="AltCredRow" Visibility="Collapsed" Margin="0,0,0,4">
+            <TextBlock Text="Used only for the connection to the target servers (not the managed login)."
+                       TextWrapping="Wrap" Foreground="#666666" FontSize="11" Margin="0,0,0,6"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <TextBlock Text="Connect as:" Width="110" VerticalAlignment="Center"/>
+                <TextBox Name="AltUserBox" Width="220"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Password:" Width="110" VerticalAlignment="Center"/>
+                <PasswordBox Name="AltPassBox" Width="220"/>
+            </StackPanel>
         </StackPanel>
 
         <!-- Buttons -->
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Name="CurrentLoginBtn" Content="Current Login" Width="110" Margin="0,0,8,0"/>
             <Button Name="OkBtn"           Content="OK"            Width="70"  Margin="0,0,8,0"/>
             <Button Name="CancelBtn"       Content="Cancel"        Width="70"/>

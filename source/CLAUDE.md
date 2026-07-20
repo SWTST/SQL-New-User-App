@@ -93,20 +93,38 @@ Working end-to-end for Windows and SQL auth. Confirmed earlier:
    is stored in `$cb.Tag` (not `.Content`) — all comparators use `.Tag`.
    See `New-LiteralCheckBox` helper in App.ps1.
 
+## Alternate connection credentials (added — the "run as other user" feature)
+The login dialog optionally captures credentials used **only** for the
+connection TO target SQL (dbatools `-SqlCredential`), separate from the target
+login being managed. Implementation:
+- **Module scope** (`Provisioning.psm1`): `$script:ConnCredential` +
+  `Set-ConnectionCredential` (setter) + `Get-ConnSplat` (returns `@{}` or
+  `@{ SqlCredential = ... }`). Every dbatools call splats `@conn` so the cred
+  flows through uniformly — no per-function signature changes.
+- **App.ps1**: `$script:SqlCredential` holds the `PSCredential`. `Show-LoginDialog`
+  builds it from the `UseAltCredCheck` / `AltUserBox` / `AltPassBox` controls and
+  calls `Set-ConnectionCredential` on OK (always — sets `$null` to clear).
+- **`Get-DbRoleList -Server -Database`** was added so the per-DB card load in
+  `Invoke-PopulateDatabaseCards` goes through the module (and thus the cred)
+  instead of calling `Get-DbaDbRole` directly.
+- `Set-ExecutionPolicy` was removed from the module top (inappropriate at import;
+  launcher already uses `-ExecutionPolicy Bypass`).
+
 ## Still to do (priority order)
 1. **Verify dark mode + snapshot fallback fixes** — user hadn't retested at
    end of session 3 after switching Settings dialog from `.GetNewClosure()`
    to `$script:_Settings*` stashing. If still broken, first add Write-Log
    diagnostics inside `Show-SettingsDialog` Save handler showing
    `$script:MainWindow` is non-null and `$script:LastLoadedServers.Count > 0`.
-2. **Move CMS host to `config/app-config.json`** — currently hardcoded
-   `DESKTOP-AD0K85U\MSSQL` in `Get-AllServers`. Add a `CmsInstance` field to
-   app-config + a setting in SettingsWindow.
-3. **"Run as other user" connection context** — login dialog should optionally
-   accept alternate Windows creds used when connecting TO SQL via dbatools
-   (separate from the target login being managed). Pass as
-   `-SqlCredential` (PSCredential) to dbatools cmdlets.
-4. **Operator guide with screenshots** (`docs/`) for handover.
+2. **Verify alternate connection credentials end-to-end** against a real
+   instance the operator can only reach with a second account. Module-level
+   plumbing is unit-verified (empty splat vs. `SqlCredential` injection);
+   the interactive WPF path parses and loads but wasn't driven against live SQL.
+3. **Seed a real CMS default** — `Get-AppConfig` and `Get-AllServers` still
+   default to the dev box `DESKTOP-AD0K85U\MSSQL`. It's now overridable in
+   Settings, but the seeded default should be the operator's CMS before handover.
+4. **Operator guide screenshots** — `docs/operator-guide.md` is written;
+   capture the 3 screenshots named in `docs/images/README.md`.
 5. Module manifest (`.psd1`) + `Export-ModuleMember`. Low priority.
 6. Remove `Invoke-UserProvisioning` once we're sure nothing else depends on it.
    Low priority — harmless dead code.

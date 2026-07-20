@@ -1,5 +1,24 @@
 ﻿Set-DbatoolsInsecureConnection -SessionOnly
-Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser
+
+# ── Connection credential (module scope) ──────────────────────────────────────
+# Optional alternate account used ONLY for the connection to target SQL
+# instances (dbatools -SqlCredential). This is separate from the target login
+# being managed. $null = connect using the operator's current Windows context.
+$script:ConnCredential = $null
+
+function Set-ConnectionCredential {
+    param([System.Management.Automation.PSCredential]$Credential = $null)
+    $script:ConnCredential = $Credential
+}
+
+# Returns a splat hashtable ({} or @{ SqlCredential = ... }) to append to every
+# dbatools call so alternate connection creds flow through uniformly.
+function Get-ConnSplat {
+    if ($script:ConnCredential) { return @{ SqlCredential = $script:ConnCredential } }
+    return @{}
+}
+
+# ── Query Functions ───────────────────────────────────────────────────────────
 
 function Get-AllServers {
     param(
@@ -8,8 +27,9 @@ function Get-AllServers {
         [int]$Mode = 1
     )
 
+    $conn = Get-ConnSplat
     if ($mode -eq 1) {
-        $servers = Get-DbaRegServer -SqlInstance $SqlInstance -ErrorAction Stop
+        $servers = Get-DbaRegServer -SqlInstance $SqlInstance @conn -ErrorAction Stop
         return $servers
     }
     if ($mode -eq 2) {
@@ -24,7 +44,8 @@ function Get-ServerLogins {
         [string]$Login
     )
 
-    $check = Get-DbaLogin -SqlInstance $Server -Login $Login
+    $conn = Get-ConnSplat
+    $check = Get-DbaLogin -SqlInstance $Server -Login $Login @conn
     if ($check) {
         Write-Host("$login - Exists on this server")
         $true
@@ -41,7 +62,8 @@ function Get-ServerRoles {
         [string]$Server
     )
 
-    $roles = Get-DbaServerRole -SqlInstance $Server
+    $conn = Get-ConnSplat
+    $roles = Get-DbaServerRole -SqlInstance $Server @conn
     return $roles
 }
 # Getting top 1 server roles - Tweak logic for app
@@ -52,19 +74,31 @@ function Get-Databases {
     param (
         [string]$Server
     )
-    Get-DbaDatabase -SqlInstance $Server | Select-Object -Property Name
+    $conn = Get-ConnSplat
+    Get-DbaDatabase -SqlInstance $Server @conn | Select-Object -Property Name
 }
 # Get-Databases -Server DESKTOP-AD0K85U\mssql2
+
+# Roles for a single database (used by the UI to build per-database cards).
+function Get-DbRoleList {
+    param (
+        [string]$Server,
+        [string]$Database
+    )
+    $conn = Get-ConnSplat
+    Get-DbaDbRole -SqlInstance $Server -Database $Database @conn
+}
 
 function Get-DatabaseRoles {
     param (
         [string]$Server
     )
 
+    $conn = Get-ConnSplat
     $allRoles = @()
 
     foreach ($db in (Get-Databases $Server)) {
-        $allRoles += Get-DBADbRole -SqlInstance $Server -Database $db.Name | Select-Object -Property Database, Name
+        $allRoles += Get-DBADbRole -SqlInstance $Server -Database $db.Name @conn | Select-Object -Property Database, Name
     }
     Return $allRoles
 }
@@ -75,13 +109,14 @@ function Get-DatabaseUsers {
         [string]$Server
     )
 
+    $conn = Get-ConnSplat
     $allUsers = @()
 
     foreach ($db in (Get-Databases $Server)) {
-        $allUsers += Get-DbaDbUser -SqlInstance $Server -Database $db.name | Select-Object -Property Database, Name
+        $allUsers += Get-DbaDbUser -SqlInstance $Server -Database $db.name @conn | Select-Object -Property Database, Name
     }
-    Return $allUsers 
-    
+    Return $allUsers
+
 }
 # Get-DatabaseUsers -Server DESKTOP-AD0K85U\MSSQL
 
@@ -96,6 +131,7 @@ function New-ServerLogin {
         [System.Security.SecureString]$SecurePassword = $null
     )
 
+    $conn = Get-ConnSplat
     $exists = Get-ServerLogins -Server $Server -Login $Login
     if ($exists) {
         Write-Host "Login '$Login' already exists on '$Server'. Skipping creation."
@@ -103,7 +139,7 @@ function New-ServerLogin {
     }
 
     if ($AuthType -eq 'Windows') {
-        New-DbaLogin -SqlInstance $Server -Login $Login -Confirm:$false -ErrorAction Stop | Out-Null
+        New-DbaLogin -SqlInstance $Server -Login $Login @conn -Confirm:$false -ErrorAction Stop | Out-Null
         Write-Host "Created Windows login '$Login' on '$Server'."
     }
     else {
@@ -111,7 +147,7 @@ function New-ServerLogin {
             throw "SecurePassword is required for SQL Authentication."
         }
         New-DbaLogin -SqlInstance $Server -Login $Login `
-            -SecurePassword $SecurePassword -Confirm:$false -ErrorAction Stop | Out-Null
+            -SecurePassword $SecurePassword @conn -Confirm:$false -ErrorAction Stop | Out-Null
         Write-Host "Created SQL login '$Login' on '$Server'."
     }
 }
@@ -123,7 +159,8 @@ function New-DatabaseUser {
         [string]$Login
     )
 
-    $existing = Get-DbaDbUser -SqlInstance $Server -Database $Database |
+    $conn = Get-ConnSplat
+    $existing = Get-DbaDbUser -SqlInstance $Server -Database $Database @conn |
     Where-Object { $_.Login -eq $Login -or $_.Name -eq $Login }
 
     if ($existing) {
@@ -131,7 +168,7 @@ function New-DatabaseUser {
         return
     }
 
-    New-DbaDbUser -SqlInstance $Server -Database $Database -Login $Login -Confirm:$false -ErrorAction Stop | Out-Null
+    New-DbaDbUser -SqlInstance $Server -Database $Database -Login $Login @conn -Confirm:$false -ErrorAction Stop | Out-Null
     Write-Host "Created database user for '$Login' in '$Database' on '$Server'."
 }
 
@@ -144,10 +181,11 @@ function Grant-ServerRole {
 
     if (-not $Roles -or $Roles.Count -eq 0) { return }
 
+    $conn = Get-ConnSplat
     foreach ($role in $Roles) {
         try {
             Add-DbaServerRoleMember -SqlInstance $Server -ServerRole $role `
-                -Login $Login -Confirm:$false -ErrorAction Stop | Out-Null
+                -Login $Login @conn -Confirm:$false -ErrorAction Stop | Out-Null
             Write-Host "Granted server role '$role' to '$Login' on '$Server'."
         }
         catch {
@@ -166,10 +204,11 @@ function Grant-DatabaseRole {
 
     if (-not $Roles -or $Roles.Count -eq 0) { return }
 
+    $conn = Get-ConnSplat
     foreach ($role in $Roles) {
         try {
             Add-DbaDbRoleMember -SqlInstance $Server -Database $Database `
-                -Role $role -User $User -Confirm:$false -ErrorAction Stop | Out-Null
+                -Role $role -User $User @conn -Confirm:$false -ErrorAction Stop | Out-Null
             Write-Host "Granted DB role '$role' to '$User' in '$Database' on '$Server'."
         }
         catch {
@@ -180,7 +219,8 @@ function Grant-DatabaseRole {
 
 function Get-AllServerLogins {
     param([string]$Server)
-    Get-DbaLogin -SqlInstance $Server |
+    $conn = Get-ConnSplat
+    Get-DbaLogin -SqlInstance $Server @conn |
     Where-Object { -not $_.IsSystemObject } |
     Select-Object -ExpandProperty Name |
     Sort-Object
@@ -192,10 +232,11 @@ function Get-UserAccess {
         [string]$Login
     )
 
+    $conn = Get-ConnSplat
     $serverRoles = @()
     try {
         $serverRoles = @(
-            Get-DbaServerRoleMember -SqlInstance $Server |
+            Get-DbaServerRoleMember -SqlInstance $Server @conn |
             Where-Object { $_.Login -eq $Login -or $_.Name -eq $Login } |
             Select-Object -ExpandProperty Role -Unique
         )
@@ -205,12 +246,12 @@ function Get-UserAccess {
     $dbRoles = @{}
     foreach ($db in (Get-Databases -Server $Server)) {
         try {
-            $user = Get-DbaDbUser -SqlInstance $Server -Database $db.Name |
+            $user = Get-DbaDbUser -SqlInstance $Server -Database $db.Name @conn |
             Where-Object { $_.Login -eq $Login -or $_.Name -eq $Login } |
             Select-Object -First 1
             if (-not $user) { continue }
             $memberRoles = @(
-                Get-DbaDbRoleMember -SqlInstance $Server -Database $db.Name |
+                Get-DbaDbRoleMember -SqlInstance $Server -Database $db.Name @conn |
                 Where-Object { $_.UserName -eq $user.Name } |
                 Select-Object -ExpandProperty Role -Unique
             )
@@ -229,10 +270,11 @@ function Revoke-ServerRole {
         [string[]]$Roles
     )
     if (-not $Roles -or $Roles.Count -eq 0) { return }
+    $conn = Get-ConnSplat
     foreach ($role in $Roles) {
         try {
             Remove-DbaServerRoleMember -SqlInstance $Server -ServerRole $role `
-                -Login $Login -Confirm:$false -ErrorAction Stop | Out-Null
+                -Login $Login @conn -Confirm:$false -ErrorAction Stop | Out-Null
             Write-Host "Revoked server role '$role' from '$Login' on '$Server'."
         }
         catch {
@@ -249,10 +291,11 @@ function Revoke-DatabaseRole {
         [string[]]$Roles
     )
     if (-not $Roles -or $Roles.Count -eq 0) { return }
+    $conn = Get-ConnSplat
     foreach ($role in $Roles) {
         try {
             Remove-DbaDbRoleMember -SqlInstance $Server -Database $Database `
-                -Role $role -User $User -Confirm:$false -ErrorAction Stop | Out-Null
+                -Role $role -User $User @conn -Confirm:$false -ErrorAction Stop | Out-Null
             Write-Host "Revoked DB role '$role' from '$User' in '$Database' on '$Server'."
         }
         catch {

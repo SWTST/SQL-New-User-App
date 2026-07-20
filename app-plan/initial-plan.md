@@ -25,7 +25,7 @@ The below features have been identified from the first draft
 - [x] Assign Permissions (per-server selections; persists across dropdown switches)
 
 **Still to do**
-- [ ] Access templates (config/access-templates.json + UI save/apply/delete)
-- [ ] Alternate connection credentials ("run as other user" when connecting to SQL)
-- [ ] Move CMS host to config; JSON fallback when CMS unavailable
-- [ ] Operator guide with screenshots (docs/)
+- [x] Access templates (config/access-templates.json + UI save/apply/delete)
+- [x] Alternate connection credentials ("run as other user" when connecting to SQL)
+- [x] Move CMS host to config; JSON fallback when CMS unavailable
+- [x] Operator guide (docs/operator-guide.md) — text complete; screenshots pending (docs/images/)

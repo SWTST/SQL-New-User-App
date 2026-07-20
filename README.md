@@ -60,14 +60,23 @@ Every launch creates `logs/app-YYYYMMDD-HHMMSS.log` with a full record of:
 
 If something didn't land as expected, this log is the first place to look.
 
-## Known limitations / WIP
-- **Access templates** (pre-canned role bundles) — UI and config file not
-  yet wired up.
-- **Alternate connection credentials** — the app currently connects to
-  target SQL instances using the operator's current Windows context.
-  Planned: optional alt-creds in the login dialog.
-- **CMS host is hardcoded** in `Get-AllServers` inside `Provisioning.psm1`.
-  Needs to move to a config file.
+## Status
+- **Access templates** — available via **Templates…** (save/apply/delete
+  multi-server blueprints).
+- **Alternate connection credentials** — tick *"Connect to SQL using different
+  credentials"* in the login dialog to connect to target instances as a
+  different account (passed to dbatools as `-SqlCredential`), separate from the
+  login being managed.
+- **CMS host is configurable** — set the CMS server in **Settings…**; it is
+  stored in `config/app-config.json`. When *CMS snapshot* is enabled, the last
+  successful server list is cached and used as a fallback if the CMS is
+  unreachable.
+
+## Known limitations
+- The seeded default CMS instance in config is still the dev box
+  (`DESKTOP-AD0K85U\MSSQL`); set your own in **Settings…** before handover.
+- Operator guide screenshots are not yet captured — see
+  [docs/operator-guide.md](docs/operator-guide.md) and `docs/images/`.
 
 ## Troubleshooting
 - *"Parser error / MissingEndCurlyBrace" on launch* — a `.ps1`/`.psm1`/`.xaml`
